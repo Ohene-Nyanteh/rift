@@ -1,10 +1,12 @@
-use crate::backend::tokens::{Tokens, Primary};
+use crate::backend::tokens::{Tokens, Primary, Token, Span};
 
 pub fn handle_numbers(
+    start: usize,
     current_char: &char,
     index: &mut usize,
     input: &Vec<(usize, char)>,
-    tokens: &mut Vec<Tokens>,
+    tokens: &mut Vec<Token>,
+    row: &usize
 ) -> Option<usize> {
     if !current_char.is_ascii_digit() {
         return None;
@@ -21,6 +23,10 @@ pub fn handle_numbers(
         *index += 1;
     }
 
-    tokens.push(Tokens::Primary(Primary::Int { val: value }));
+    tokens.push(Token {
+        kind: Tokens::Primary(Primary::Int { val: value.parse().unwrap() }),
+        span: Span { start, end: *index, row: *row},
+    });
+
     Some(*index)
 }

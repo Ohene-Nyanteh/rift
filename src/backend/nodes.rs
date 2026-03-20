@@ -1,24 +1,57 @@
-#[derive(Debug)]
-pub struct Node {
-    type: NodeType,
-    value: Vec<Node>
-}
-
-
+use super::tokens::{Operations, Primary};
 
 #[derive(Debug)]
-pub enum NodeType {
-    Terminal(TerminalNodes),
-    NonTerminal(NonTerminalNodes)
-}
-
-
-#[derive(Debug)]
-pub enum TerminalNodes {
-
+pub enum Statement {
+    Function(Box<FunctionDecl>),
+    Let(Box<LetDecl>),
+    While(Box<WhileDecl>),
+    Expression(Expression),
+    If {
+        condition: Expression,
+        body: Block,
+        else_body: Option<Block>,
+    }
 }
 
 #[derive(Debug)]
-pub enum NonTerminalNodes {
-
+pub struct FunctionDecl {
+    pub name: Identifier,
+    pub args: Vec<Identifier>,
+    pub body: Block,
 }
+
+#[derive(Debug)]
+pub struct LetDecl {
+    pub name: Identifier,
+    pub value: Expression,
+}
+
+#[derive(Debug)]
+pub struct WhileDecl {
+    pub condition: Expression,
+    pub body: Block
+}
+
+#[derive(Debug)]
+pub struct Block {
+    pub statements: Vec<Statement>,
+}
+
+#[derive(Debug)]
+pub enum Expression {
+    Unary { op: Operations, expr: Box<Expression> },
+    Binary {
+        left: Box<Expression>,
+        op: Operations,
+        right: Box<Expression>,
+    },
+    Literal(Primary),
+    Variable(Identifier),
+    Call {
+        callee: Identifier,
+        args: Vec<Expression>,
+    }
+}
+
+#[derive(Debug)]
+pub struct Identifier(pub String);

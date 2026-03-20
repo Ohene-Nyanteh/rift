@@ -1,19 +1,12 @@
 # Damn this shouldn't work
-
 let a = 20;
 
-fn add(a: int, b: int) {
+fn add(a, b) {
     if (a >= b) {
         print("a");
+    } else {
+        print("b");
     }
-    else if (b <= a) {
-        print("b")
-    }
-    else if (a != b) {
-        doNothing();
-    }
-    else if(a ! c) {
-        damn()
-    }
+
     return a + b;
 }

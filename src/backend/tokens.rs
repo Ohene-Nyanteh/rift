@@ -1,24 +1,14 @@
-
-#[derive(Debug)]
-pub enum ArithmeticOp {
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operations {
     Add,
     Sub,
     Div,
-    Mul
-}
-
-
-#[derive(Debug)]
-pub enum LogicalOp {
+    Mul,
     And,
     Or,
     Not,
     Nor,
-    Xor
-}
-
-#[derive(Debug)]
-pub enum ComparisonOp {
+    Xor,
     GreaterThan,
     LessThan,
     GreaterOrEquals,
@@ -28,24 +18,16 @@ pub enum ComparisonOp {
 }
 
 
-#[derive(Debug)]
-pub enum Operations {
-    Arithmetic(ArithmeticOp),
-    Logical(LogicalOp),
-    Comparison(ComparisonOp)
-}
-
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
-    Int { val: String },
-    Bool,
-    Float,
+    Int { val: i64 },
+    Bool {val: bool},
+    Float {val: f64},
     Str { val: String},
-    Char
+    Char { val: char}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Keywords {
     Fn,
     If,
@@ -57,42 +39,46 @@ pub enum Keywords {
     Break,
     Continue,
     Match,
-    // These will be added later
-    // Enum,
-    // Struct,
-    // Class,
-    // Public,
-    // Private
+    Enum,
+    Struct,
+    Class
 }
 
-#[derive(Debug)]
-pub enum Secondary {
-    Variable {val: String},
-    Keyword(Keywords)
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NonAtomic {
     Colon,
-    Commar,
+    Comma,
     SemiColon,
-    Paren(SymbolVal),
-    CurlyBraces(SymbolVal),
-    SquareBraces(SymbolVal),
+    LParen,
+    RParen,
+    LCurlyBraces,
+    RCurlyBraces,
+    LSquareBraces,
+    RSquareBraces,
     Assignment
 }
 
-#[derive(Debug)]
-pub enum SymbolVal {
-    Open,
-    Close
-}
-
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Tokens {
     Atomic(Operations),
     Primary(Primary),
+    Variable { val: String },
     NonAtomic(NonAtomic),
-    Secondary(Secondary)
+    Keyword(Keywords),
+    EOF
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Token {
+    pub kind: Tokens,
+    pub span: Span
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+    pub row: usize
 }

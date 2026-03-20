@@ -5,6 +5,7 @@ pub mod non_atomic;
 pub mod numbers;
 pub mod comments;
 pub mod variables;
+pub mod newline;
 pub mod whitespace;
 
 
@@ -18,3 +19,4 @@ pub use numbers::handle_numbers;
 pub use variables::handle_variable;
 pub use whitespace::handle_whitespace;
 pub use comments::handle_comments;
+pub use newline::handle_newline;

@@ -1,9 +1,17 @@
-pub fn handle_comments(current_char: &char, index: &mut usize, input: &Vec<(usize, char)>) -> Option<usize> {
+pub fn handle_comments(
+    start: usize,
+    current_char: &char,
+    index: &mut usize,
+    input: &Vec<(usize, char)>,
+    row: &mut usize
+) -> Option<usize> {
     if *current_char != '#' {
         return None;
     }
+
     while *index < input.len() && input[*index].1 != '\n' {
         *index += 1;
     }
+    *row += 1;
     Some(*index)
 }

@@ -1,47 +1,77 @@
-use crate::backend::tokens::{Tokens, Operations, NonAtomic, ComparisonOp, LogicalOp};
+use crate::backend::tokens::{Tokens, Operations, NonAtomic, Token, Span};
 
-pub fn handle_comparison_operators(tokens: &mut Vec<Tokens>, current_char: &char, index: &mut usize, next_char: Option<char>) -> Option<usize> {
-    match current_char {
+pub fn handle_comparison_operators(
+    tokens: &mut Vec<Token>,
+    start: usize,
+    current_char: &char,
+    index: &mut usize,
+    next_char: Option<char>,
+    row: &usize
+) -> Option<usize> {
+    let t = match current_char {
         '>' => {
             if next_char == Some('=') {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::GreaterOrEquals)));
                 *index += 2;
+                Token {
+                    kind: Tokens::Atomic(Operations::GreaterOrEquals),
+                    span: Span { start, end: *index, row: *row},
+                }
             } else {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::GreaterThan)));
                 *index += 1;
+                Token {
+                    kind: Tokens::Atomic(Operations::GreaterThan),
+                    span: Span { start, end: *index, row: *row},
+                }
             }
-            Some(*index)
         },
         '<' => {
             if next_char == Some('=') {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::LessOrEquals)));
                 *index += 2;
+                Token {
+                    kind: Tokens::Atomic(Operations::LessOrEquals),
+                    span: Span { start, end: *index, row: *row},
+                }
             } else {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::LessThan)));
                 *index += 1;
+                Token {
+                    kind: Tokens::Atomic(Operations::LessThan),
+                    span: Span { start, end: *index, row: *row},
+                }
             }
-            Some(*index)
         },
         '=' => {
             if next_char == Some('=') {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::EqualTo)));
                 *index += 2;
+                Token {
+                    kind: Tokens::Atomic(Operations::EqualTo),
+                    span: Span { start, end: *index, row: *row},
+                }
             } else {
-                tokens.push(Tokens::NonAtomic(NonAtomic::Assignment));
                 *index += 1;
+                Token {
+                    kind: Tokens::NonAtomic(NonAtomic::Assignment),
+                    span: Span { start, end: *index, row: *row},
+                }
             }
-            Some(*index)
         },
         '!' => {
             if next_char == Some('=') {
-                tokens.push(Tokens::Atomic(Operations::Comparison(ComparisonOp::NotEqualTo)));
                 *index += 2;
+                Token {
+                    kind: Tokens::Atomic(Operations::NotEqualTo),
+                    span: Span { start, end: *index, row: *row},
+                }
             } else {
-                tokens.push(Tokens::Atomic(Operations::Logical(LogicalOp::Not)));
                 *index += 1;
+                Token {
+                    kind: Tokens::Atomic(Operations::Not),
+                    span: Span { start, end: *index, row: *row},
+                }
             }
-            Some(*index)
         },
-        _ => None
-    }
+        _ => return None,
+    };
+
+    tokens.push(t);
+    Some(*index)
 }

@@ -1,10 +1,12 @@
-use crate::backend::tokens::{Tokens, Secondary, Keywords};
+use crate::backend::tokens::{Tokens, Keywords, Token, Span};
 
 pub fn handle_variable(
+    start: usize,
     current_char: &char,
     index: &mut usize,
     input: &Vec<(usize, char)>,
-    tokens: &mut Vec<Tokens>,
+    tokens: &mut Vec<Token>,
+    row: &usize
 ) -> Option<usize> {
     if !current_char.is_alphabetic() {
         return None;
@@ -21,22 +23,30 @@ pub fn handle_variable(
         *index += 1;
     }
 
-    tokens.push(to_keyword_or_variable(value));
+    let token_kind = to_keyword_or_variable(value);
+    tokens.push(Token {
+        kind: token_kind,
+        span: Span { start, end: *index, row: *row },
+    });
+
     Some(*index)
 }
 
 fn to_keyword_or_variable(value: String) -> Tokens {
     match value.as_str() {
-        "fn"       => Tokens::Secondary(Secondary::Keyword(Keywords::Fn)),
-        "if"       => Tokens::Secondary(Secondary::Keyword(Keywords::If)),
-        "else"     => Tokens::Secondary(Secondary::Keyword(Keywords::Else)),
-        "elif"     => Tokens::Secondary(Secondary::Keyword(Keywords::Elif)),
-        "let"      => Tokens::Secondary(Secondary::Keyword(Keywords::Let)),
-        "while"    => Tokens::Secondary(Secondary::Keyword(Keywords::While)),
-        "for"      => Tokens::Secondary(Secondary::Keyword(Keywords::For)),
-        "break"    => Tokens::Secondary(Secondary::Keyword(Keywords::Break)),
-        "continue" => Tokens::Secondary(Secondary::Keyword(Keywords::Continue)),
-        "match"    => Tokens::Secondary(Secondary::Keyword(Keywords::Match)),
-        _          => Tokens::Secondary(Secondary::Variable { val: value }),
+        "fn"       => Tokens::Keyword(Keywords::Fn),
+        "if"       => Tokens::Keyword(Keywords::If),
+        "else"     => Tokens::Keyword(Keywords::Else),
+        "elif"     => Tokens::Keyword(Keywords::Elif),
+        "let"      => Tokens::Keyword(Keywords::Let),
+        "while"    => Tokens::Keyword(Keywords::While),
+        "for"      => Tokens::Keyword(Keywords::For),
+        "break"    => Tokens::Keyword(Keywords::Break),
+        "continue" => Tokens::Keyword(Keywords::Continue),
+        "struct" => Tokens::Keyword(Keywords::Struct),
+        "class" => Tokens::Keyword(Keywords::Class),
+        "enum" => Tokens::Keyword(Keywords::Enum),
+        "match"    => Tokens::Keyword(Keywords::Match),
+        _          => Tokens::Variable { val: value },
     }
 }

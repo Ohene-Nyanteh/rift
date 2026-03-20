@@ -1,48 +1,61 @@
-use crate::backend::tokens::{Tokens, NonAtomic, SymbolVal};
+use crate::backend::tokens::{Tokens, Token, NonAtomic, Span};
 
-pub fn handle_non_atomic(tokens: &mut Vec<Tokens>, current_char: &char, index: &mut usize) -> Option<usize> {
-    match *current_char {
+pub fn handle_non_atomic(
+    tokens: &mut Vec<Token>,
+    start: usize,
+    current_char: &char,
+    index: &mut usize,
+    row: &usize
+) -> Option<usize> {
+    let t = match *current_char {
         ':' => {
-            tokens.push(Tokens::NonAtomic(NonAtomic::Colon));
             *index += 1;
-            Some(*index)
-        },
+            Token {
+                kind: Tokens::NonAtomic(NonAtomic::Colon),
+                span: Span { start, end: *index, row: *row},
+            }
+        }
         ';' => {
-            tokens.push(Tokens::NonAtomic(NonAtomic::SemiColon));
             *index += 1;
-            Some(*index)
-        },
+            Token {
+                kind: Tokens::NonAtomic(NonAtomic::SemiColon),
+                span: Span { start, end: *index, row: *row},
+            }
+        }
         '{' | '}' => {
-            if *current_char == '{' {
-                tokens.push(Tokens::NonAtomic(NonAtomic::CurlyBraces(SymbolVal::Open)));
-                *index += 1;
-                Some(*index)
-            }
-            else {
-                tokens.push(Tokens::NonAtomic(NonAtomic::CurlyBraces(SymbolVal::Close)));
-                *index += 1;
-                Some(*index)
-            }
-
-        },
-        ',' => {
-            tokens.push(Tokens::NonAtomic(NonAtomic::Commar));
             *index += 1;
-            Some(*index)
-        },
-        '(' | ')'  => {
-            if *current_char == '(' {
-                tokens.push(Tokens::NonAtomic(NonAtomic::Paren(SymbolVal::Open)));
-                *index += 1;
-                Some(*index)
+            let kind = if *current_char == '{' {
+                NonAtomic::LCurlyBraces
+            } else {
+                NonAtomic::RCurlyBraces
+            };
+            Token {
+                kind: Tokens::NonAtomic(kind),
+                span: Span { start, end: *index, row: *row},
             }
-            else {
-                tokens.push(Tokens::NonAtomic(NonAtomic::Paren(SymbolVal::Close)));
-                *index += 1;
-                Some(*index)
+        }
+        ',' => {
+            *index += 1;
+            Token {
+                kind: Tokens::NonAtomic(NonAtomic::Comma),
+                span: Span { start, end: *index, row: *row},
             }
+        }
+        '(' | ')' => {
+            *index += 1;
+            let kind = if *current_char == '(' {
+                NonAtomic::LParen
+            } else {
+                NonAtomic::RParen
+            };
+            Token {
+                kind: Tokens::NonAtomic(kind),
+                span: Span { start, end: *index, row: *row},
+            }
+        }
+        _ => return None,
+    };
 
-        },
-        _ => None
-    }
+    tokens.push(t);
+    Some(*index)
 }
