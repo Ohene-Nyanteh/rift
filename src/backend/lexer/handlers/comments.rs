@@ -1,9 +1,8 @@
 pub fn handle_comments(
-    start: usize,
     current_char: &char,
     index: &mut usize,
     input: &Vec<(usize, char)>,
-    row: &mut usize
+    row: &mut usize,
 ) -> Option<usize> {
     if *current_char != '#' {
         return None;

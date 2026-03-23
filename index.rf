@@ -2,3 +2,7 @@
 let name = "Ohene";
 let j = 20;
 let x = 10;
+
+fn name(x, j) {
+    let a = 30;
+}

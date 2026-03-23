@@ -1,8 +1,7 @@
-use crate::backend::parser::{Parser};
-use crate::backend::errors::{Error};
-use crate::backend::nodes::{Statement, LetDecl, Identifier, Expression};
-use crate::backend::tokens::{Primary, Tokens, NonAtomic, Token};
-
+use crate::backend::errors::Error;
+use crate::backend::nodes::{Block, FunctionDecl, Identifier, Statement};
+use crate::backend::parser::Parser;
+use crate::backend::tokens::{NonAtomic, Token, Tokens};
 
 impl Parser {
     pub fn parse_functions(&mut self) -> Result<Statement, Error> {
@@ -12,15 +11,78 @@ impl Parser {
          * }
          */
 
+        let fn_name_token = self.next().ok_or(Error::UnexpectedEOF)?;
+        let fn_name = match &fn_name_token.kind {
+            Tokens::Variable(val) => Identifier(val.to_string()),
+            unexpected => {
+                return Err(Error::InvalidSyntax(format!(
+                    "Expected a fn name, got {:?}",
+                    unexpected
+                )));
+            }
+        };
 
-         let fn_name_token = self.next();
-         let fn_name = match &fn_name_token.kind {
-             Tokens::Variable(val) => Identifier(val.to_string()),
-             _ => return Err(Error::InvalidSyntax("Expected a fn name ".to_string())),
-         };
+        // skip the first open tag
+        let open_tag = self.next().ok_or(Error::UnexpectedEOF)?;
+        if open_tag.kind != Tokens::NonAtomic(NonAtomic::LParen) {
+            return Err(Error::InvalidSyntax(format!(
+                "Expected a (  got {:?}",
+                open_tag.kind
+            )));
+        }
 
-         // skip the first open tag
-         let open_tag = self.next();
-         if open_tag.kind != Tokens::LOpenBraces
+        // run a simple loop till we see )
+        let mut args: Vec<Identifier> = vec![];
+        loop {
+            let next_token = self.next().ok_or(Error::UnexpectedEOF)?;
+
+            match &next_token.kind {
+                Tokens::NonAtomic(NonAtomic::RParen) => break,
+                Tokens::Variable(val) => args.push(Identifier(val.to_string())),
+                Tokens::NonAtomic(NonAtomic::Comma) => continue,
+                unexpected => {
+                    return Err(Error::InvalidSyntax(format!(
+                        "Expected a ) , or args, got {:?}",
+                        unexpected
+                    )));
+                }
+            }
+        }
+
+        let lcurly_token = self.next().ok_or(Error::UnexpectedEOF)?;
+        if lcurly_token.kind != Tokens::NonAtomic(NonAtomic::LCurlyBraces) {
+            return Err(Error::InvalidSyntax(format!(
+                "Expected a )  got {:?}",
+                lcurly_token.kind
+            )));
+        }
+
+        let mut body: Vec<Statement> = vec![];
+        loop {
+            match self.peek() {
+                Some(Token {
+                    kind: Tokens::NonAtomic(NonAtomic::RCurlyBraces),
+                    ..
+                }) => {
+                    self.next();
+                    break;
+                }
+                Some(Token {
+                    kind: Tokens::EOF, ..
+                })
+                | None => {
+                    return Err(Error::UnexpectedEOF);
+                }
+                _ => {
+                    body.push(self.parse_statement()?);
+                }
+            }
+        }
+
+        Ok(Statement::Function(Box::new(FunctionDecl {
+            name: fn_name,
+            args,
+            body: Block { statements: body },
+        })))
     }
 }

@@ -1,4 +1,4 @@
-use crate::backend::tokens::{Tokens, Keywords, Token, Span};
+use crate::backend::tokens::{Keywords, Primary, Span, Token, Tokens};
 
 pub fn handle_variable(
     start: usize,
@@ -6,7 +6,7 @@ pub fn handle_variable(
     index: &mut usize,
     input: &Vec<(usize, char)>,
     tokens: &mut Vec<Token>,
-    row: &usize
+    row: &usize,
 ) -> Option<usize> {
     if !current_char.is_alphabetic() {
         return None;
@@ -26,7 +26,11 @@ pub fn handle_variable(
     let token_kind = to_keyword_or_variable(value);
     tokens.push(Token {
         kind: token_kind,
-        span: Span { start, end: *index, row: *row },
+        span: Span {
+            start,
+            end: *index,
+            row: *row,
+        },
     });
 
     Some(*index)
@@ -34,19 +38,23 @@ pub fn handle_variable(
 
 fn to_keyword_or_variable(value: String) -> Tokens {
     match value.as_str() {
-        "fn"       => Tokens::Keyword(Keywords::Fn),
-        "if"       => Tokens::Keyword(Keywords::If),
-        "else"     => Tokens::Keyword(Keywords::Else),
-        "elif"     => Tokens::Keyword(Keywords::Elif),
-        "let"      => Tokens::Keyword(Keywords::Let),
-        "while"    => Tokens::Keyword(Keywords::While),
-        "for"      => Tokens::Keyword(Keywords::For),
-        "break"    => Tokens::Keyword(Keywords::Break),
+        "fn" => Tokens::Keyword(Keywords::Fn),
+        "if" => Tokens::Keyword(Keywords::If),
+        "else" => Tokens::Keyword(Keywords::Else),
+        "elif" => Tokens::Keyword(Keywords::Elif),
+        "let" => Tokens::Keyword(Keywords::Let),
+        "while" => Tokens::Keyword(Keywords::While),
+        "for" => Tokens::Keyword(Keywords::For),
+        "break" => Tokens::Keyword(Keywords::Break),
         "continue" => Tokens::Keyword(Keywords::Continue),
         "struct" => Tokens::Keyword(Keywords::Struct),
         "class" => Tokens::Keyword(Keywords::Class),
         "enum" => Tokens::Keyword(Keywords::Enum),
-        "match"    => Tokens::Keyword(Keywords::Match),
-        _          => Tokens::Variable(value),
+        "match" => Tokens::Keyword(Keywords::Match),
+
+        // bool data type
+        "true" => Tokens::Primary(Primary::Bool(true)),
+        "false" => Tokens::Primary(Primary::Bool(false)),
+        _ => Tokens::Variable(value),
     }
 }
