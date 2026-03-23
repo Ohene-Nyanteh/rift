@@ -47,6 +47,6 @@ fn to_keyword_or_variable(value: String) -> Tokens {
         "class" => Tokens::Keyword(Keywords::Class),
         "enum" => Tokens::Keyword(Keywords::Enum),
         "match"    => Tokens::Keyword(Keywords::Match),
-        _          => Tokens::Variable { val: value },
+        _          => Tokens::Variable(value),
     }
 }

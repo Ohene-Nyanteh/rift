@@ -16,17 +16,30 @@ pub fn handle_numbers(
 
     while *index < input.len() {
         let ch = input[*index].1;
-        if !ch.is_ascii_digit() {
-            break;
+        if ch.is_ascii_digit() || ch == '.' {
+            value.push(ch);
+
         }
-        value.push(ch);
-        *index += 1;
+        else {
+               break;
+        }
+
+       *index += 1;
     }
 
-    tokens.push(Token {
-        kind: Tokens::Primary(Primary::Int { val: value.parse().unwrap() }),
-        span: Span { start, end: *index, row: *row},
-    });
+    // parse as float if it contains a .
+    if value.contains(".") {
+        tokens.push(Token {
+            kind: Tokens::Primary(Primary::Float(value.parse().unwrap())),
+            span: Span { start, end: *index, row: *row},
+        });
+    }
+    else {
+        tokens.push(Token {
+            kind: Tokens::Primary(Primary::Int(value.parse().unwrap())),
+            span: Span { start, end: *index, row: *row},
+        });
+    }
 
     Some(*index)
 }

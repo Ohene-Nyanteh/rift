@@ -22,8 +22,8 @@ pub struct FunctionDecl {
 
 #[derive(Debug)]
 pub struct LetDecl {
-    pub name: Identifier,
-    pub value: Expression,
+    pub name: Option<Identifier>,
+    pub value: Option<Expression>,
 }
 
 #[derive(Debug)]

@@ -1,10 +1,10 @@
-use crate::backend::tokens::{Tokens, Token};
+use crate::backend::tokens::{Tokens, Token, Keywords};
 use super::errors::Error;
 use super::nodes::{Statement, Expression, Block, Identifier, FunctionDecl, LetDecl, WhileDecl};
+pub mod handlers;
 
 pub struct Parser {
     tokens: Vec<Token>,
-    expected: Vec<&Tokens>,
     pos: usize,
 }
 
@@ -12,51 +12,47 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0, expected: vec![]}
+        Self { tokens, pos: 0}
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek(&mut self) -> Option<&Token> {
         self.tokens.get(self.pos)
     }
 
-    fn next(&mut self) -> Option<&Token> {
-        let tok = self.tokens.get(self.pos);
+    fn next(&mut self) -> Option<Token> {
+        let tok = self.tokens.get(self.pos).cloned();
         if tok.is_some() {
             self.pos += 1;
         }
         tok
     }
 
-    /// General expect function using a matcher closure
-    fn expect(&mut self, token: &Tokens) {
-        self.expected.push(&Tokens)
-    }
-
-    fn check_expected(&mut self, token: &Tokens) {
-        let is_token = |t: &Tokens| t == token;
-        self.expected.pop_if(is_token);
-    }
-
-    pub fn parse_code(&mut self) -> Result<Vec<Statement>, Error> {
+    pub fn parse_code(&mut self)  -> Result<Vec<Statement>, Error>{
         let mut statements = Vec::new();
-        while self.peek().is_some() {
+        while let Some(token) = self.peek() {
+            if token.kind == Tokens::EOF {
+                break;
+            }
             statements.push(self.parse_statement()?);
         }
         Ok(statements)
     }
 
-        fn parse_statement(&mut self) -> Result<Statement, Error> {
-            match self.peek() {
-                Some(Token { kind: Tokens::Secondary(Secondary::Keyword(Keywords::Let)), .. }) => self.parse_let(),
-                // Some(Token { kind: Tokens::Secondary(Secondary::Keyword(Keywords::Fn)), .. }) => self.parse_function(),
+    fn parse_statement(&mut self)  -> Result<Statement, Error> {
+            match self.next() {
+                Some(Token { kind: Tokens::Keyword(Keywords::Let), .. }) => Ok(self.parse_let()?),
+                Some(Token { kind: Tokens::Keyword(Keywords::Fn), .. }) => Ok(self.parse_function()?),
                 // Some(Token { kind: Tokens::Secondary(Secondary::Keyword(Keywords::While)), .. }) => self.parse_while(),
                 // Some(Token { kind: Tokens::Secondary(Secondary::Keyword(Keywords::If)), .. }) => self.parse_if(),
-                _ => {
-                    let expr = self.parse_expression(Precedence::Lowest)?;
-                    // Expect semicolon at end of expression statement
-                    self.expect(|k| matches!(k, Tokens::NonAtomic(NonAtomic::SemiColon)))?;
-                    Ok(Statement::Expression(expr))
-                }
+                Some(Token { kind: Tokens::EOF, .. }) => Err(Error::UnexpectedEOF),
+                _ => Err(Error::InvalidSyntax("Invalid Syntax".to_string()))
+                // _ => {
+                //     // let expr = self.parse_expression(Precedence::Lowest)?;
+                //     // // Expect semicolon at end of expression statement
+                //     // self.expect(|k| matches!(k, Tokens::NonAtomic(NonAtomic::SemiColon)))?;
+                //     // Ok(Statement::Expression(expr))
+                //     Ok(self.parse_let()?)
+                //     }
             }
         }
 }

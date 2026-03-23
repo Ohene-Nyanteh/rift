@@ -20,11 +20,11 @@ pub enum Operations {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
-    Int { val: i64 },
-    Bool {val: bool},
-    Float {val: f64},
-    Str { val: String},
-    Char { val: char}
+    Int(i64),
+    Bool(bool), // to do
+    Float(f64),
+    Str(String),
+    Char(char) // to do
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -62,7 +62,7 @@ pub enum NonAtomic {
 pub enum Tokens {
     Atomic(Operations),
     Primary(Primary),
-    Variable { val: String },
+    Variable(String),
     NonAtomic(NonAtomic),
     Keyword(Keywords),
     EOF

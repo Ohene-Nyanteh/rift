@@ -27,7 +27,7 @@ pub fn handle_str(
     *index += 1; // skip closing quote
 
     tokens.push(Token {
-        kind: Tokens::Primary(Primary::Str { val: value.into() }),
+        kind: Tokens::Primary(Primary::Str(value.into())),
         span: Span { start, end: *index, row: *row},
     });
 

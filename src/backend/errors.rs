@@ -8,6 +8,7 @@ pub enum Error {
     },
     UnexpectedEOF,
     InvalidCall,
+    InvalidSyntax(String),
     Custom(String),
 }
 
@@ -19,6 +20,7 @@ impl std::fmt::Display for Error {
             }
             Error::UnexpectedEOF => write!(f, "Unexpected end of file"),
             Error::InvalidCall => write!(f, "Invalid Function Call"),
+            Error::InvalidSyntax(msg) => write!(f, "{}",msg),
             Error::Custom(msg) => write!(f, "{}", msg),
         }
     }

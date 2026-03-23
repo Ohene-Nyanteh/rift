@@ -1,12 +1,4 @@
 # Damn this shouldn't work
-let a = 20;
-
-fn add(a, b) {
-    if (a >= b) {
-        print("a");
-    } else {
-        print("b");
-    }
-
-    return a + b;
-}
+let name = "Ohene";
+let j = 20;
+let x = 10;
