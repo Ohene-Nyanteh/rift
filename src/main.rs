@@ -8,11 +8,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let init = Config::build(&args);
     let content = init.run();
+
     let Ok(tokens) = tokenizer(content) else {
-        todo!()
+        eprintln!("Lexer error");
+        std::process::exit(1);
     };
+
     let mut parser = Parser::new(tokens);
-    let code = parser.parse_code()?;
-    println!("{code:#?}");
+    let parsed_code = parser.parse_code()?;
+
+    println!("{parsed_code:#?}");
     Ok(())
 }

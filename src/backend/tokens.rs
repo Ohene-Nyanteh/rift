@@ -7,24 +7,23 @@ pub enum Operations {
     And,
     Or,
     Not,
-    Nor,
     Xor,
+    Nor,
     GreaterThan,
     LessThan,
     GreaterOrEquals,
     LessOrEquals,
     EqualTo,
-    NotEqualTo
+    NotEqualTo,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primary {
     Int(i64),
-    Bool(bool), // to do
+    Bool(bool),
     Float(f64),
     Str(String),
-    Char(char) // to do
+    Char(char), // to do
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,7 +40,7 @@ pub enum Keywords {
     Match,
     Enum,
     Struct,
-    Class
+    Return,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,7 +54,7 @@ pub enum NonAtomic {
     RCurlyBraces,
     LSquareBraces,
     RSquareBraces,
-    Assignment
+    Assignment,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -65,20 +64,18 @@ pub enum Tokens {
     Variable(String),
     NonAtomic(NonAtomic),
     Keyword(Keywords),
-    EOF
+    EOF,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub kind: Tokens,
-    pub span: Span
+    pub span: Span,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
-    pub row: usize
+    pub row: usize,
 }

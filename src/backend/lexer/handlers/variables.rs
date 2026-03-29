@@ -48,7 +48,7 @@ fn to_keyword_or_variable(value: String) -> Tokens {
         "break" => Tokens::Keyword(Keywords::Break),
         "continue" => Tokens::Keyword(Keywords::Continue),
         "struct" => Tokens::Keyword(Keywords::Struct),
-        "class" => Tokens::Keyword(Keywords::Class),
+        "return" => Tokens::Keyword(Keywords::Return),
         "enum" => Tokens::Keyword(Keywords::Enum),
         "match" => Tokens::Keyword(Keywords::Match),
 

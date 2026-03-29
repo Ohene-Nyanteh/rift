@@ -1,9 +1,7 @@
-use crate::backend::parser::{Parser};
-use crate::backend::errors::{Error};
-use crate::backend::nodes::{Statement, LetDecl, Identifier, Expression};
-use crate::backend::tokens::{Primary, Tokens, NonAtomic, Token};
-
-
+use crate::backend::errors::Error;
+use crate::backend::nodes::{Expression, Identifier, LetDecl, Statement};
+use crate::backend::parser::Parser;
+use crate::backend::tokens::{NonAtomic, Tokens};
 
 impl Parser {
     pub fn parse_let(&mut self) -> Result<Statement, Error> {
@@ -13,7 +11,11 @@ impl Parser {
         let name_token = self.next().ok_or(Error::UnexpectedEOF)?;
         let name = match &name_token.kind {
             Tokens::Variable(val) => Identifier(val.to_string()),
-            _ => return Err(Error::InvalidSyntax("Expected a variable name ".to_string())),
+            _ => {
+                return Err(Error::InvalidSyntax(
+                    "Expected a variable name ".to_string(),
+                ));
+            }
         };
 
         // expect `=`
@@ -36,8 +38,8 @@ impl Parser {
         }
 
         Ok(Statement::Let(Box::new(LetDecl {
-            name: Some(name),
-            value: Some(value),
+            name: name,
+            value: Some(Box::new(value)),
         })))
     }
 }
