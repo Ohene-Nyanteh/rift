@@ -112,7 +112,7 @@ fn infix_binding_power(op: &Operations) -> Option<(u8, u8)> {
 
         // arithmetic — highest
         Operations::Add | Operations::Sub => Some((7, 8)),
-        Operations::Mul | Operations::Div => Some((9, 10)),
+        Operations::Mul | Operations::Div | Operations::Mod => Some((9, 10)),
 
         // Not/Sub handled as unary in the nud, not here
         _ => None,

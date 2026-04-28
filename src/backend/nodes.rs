@@ -27,8 +27,13 @@ pub enum Statement {
     },
     Return(Option<Box<Expression>>),
     Break,
+    Print(Box<Expression>),
     Continue,
     Expression(Box<Expression>),
+    VariableAssignment {
+        var: Identifier,
+        exp: Box<Expression>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -61,7 +66,7 @@ pub struct Block {
     pub statements: Vec<Statement>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     Unary {
         op: Operations,
@@ -80,5 +85,5 @@ pub enum Expression {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Identifier(pub String);

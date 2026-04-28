@@ -15,6 +15,7 @@ pub enum Operations {
     LessOrEquals,
     EqualTo,
     NotEqualTo,
+    Mod,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,6 +42,7 @@ pub enum Keywords {
     Enum,
     Struct,
     Return,
+    Print,
 }
 
 #[derive(Debug, Clone, PartialEq)]

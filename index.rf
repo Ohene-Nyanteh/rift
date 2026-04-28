@@ -1,6 +1,41 @@
-# Damn this shouldn't work
-let name = "Ohene";
-let j = 20;
-let x = 10;
+# Rift Program: Number Classifier
+# Counts from 1 to 20 and classifies each number
 
-20 + 10;
+let start = 1;
+let end = 20;
+let current = start;
+
+# Labels for classification output
+let fizz_label = "Fizz";
+let buzz_label = "Buzz";
+let fizzbuzz_label = "FizzBuzz";
+
+# Counters to track how many of each we found
+let fizz_count = 0;
+let buzz_count = 0;
+let fizzbuzz_count = 0;
+let plain_count = 0;
+
+while (current <= end) {
+    # Check divisibility and classify the current number
+    if (current % 15 == 0) {
+        # Divisible by both 3 and 5
+        fizzbuzz_count = fizzbuzz_count + 1;
+    } elif (current % 3 == 0) {
+        # Divisible by 3 only
+        fizz_count = fizz_count + 1;
+    } elif (current % 5 == 0) {
+        # Divisible by 5 only
+        buzz_count = buzz_count + 1;
+    } else {
+        # Plain number — not divisible by 3 or 5
+        plain_count = plain_count + 1;
+    }
+
+    current = current + 1;
+}
+
+# Final tally
+let total = fizz_count + buzz_count + fizzbuzz_count + plain_count;
+print("Total: ");
+print(total);

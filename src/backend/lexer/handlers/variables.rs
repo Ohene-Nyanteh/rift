@@ -51,6 +51,7 @@ fn to_keyword_or_variable(value: String) -> Tokens {
         "return" => Tokens::Keyword(Keywords::Return),
         "enum" => Tokens::Keyword(Keywords::Enum),
         "match" => Tokens::Keyword(Keywords::Match),
+        "print" => Tokens::Keyword(Keywords::Print),
 
         // bool data type
         "true" => Tokens::Primary(Primary::Bool(true)),

@@ -14,7 +14,7 @@ impl Parser {
     }
 
     pub fn peek(&self) -> Option<&Token> {
-        self.tokens.get(self.pos)
+        self.tokens.get(self.pos).clone()
     }
 
     pub fn expect(&mut self, expected_token: Tokens) -> Result<(), Error> {
@@ -97,6 +97,11 @@ impl Parser {
                 self.next();
                 self.parse_struct()
             }
+            Tokens::Keyword(Keywords::Print) => {
+                self.next();
+                self.parse_print()
+            }
+            Tokens::Variable(_) => self.parse_variables(),
             Tokens::EOF => Err(Error::UnexpectedEOF),
             _ => {
                 let expr = self.parse_expressions(0)?;

@@ -7,8 +7,9 @@ pub mod h_for;
 pub mod h_if;
 pub mod h_let;
 pub mod h_match;
+pub mod h_print;
 pub mod h_return;
 pub mod h_struct;
+pub mod h_variables;
 pub mod h_while;
-
 // pub use h_let::{Parser};
