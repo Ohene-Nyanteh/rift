@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::backend::{
+    environment::Environment,
     executor::{Value, executor, handlers::h_expressions::execute_expressions},
-    nodes::{Block, Expression, Identifier, Signal},
+    nodes::{Block, Expression, Signal},
 };
 
 pub fn execute_if(
@@ -10,9 +11,9 @@ pub fn execute_if(
     body: Block,
     elif_branches: Vec<(Box<Expression>, Block)>,
     else_body: Option<Block>,
-    variable_hashmap: &mut HashMap<Identifier, Value>,
+    env: &Rc<RefCell<Environment>>,
 ) -> Signal {
-    let condition_result = match execute_expressions(condition, variable_hashmap) {
+    let condition_result = match execute_expressions(condition, env) {
         Value::Bool(v) => v,
         Value::Float(v) => {
             if v > 0.0 {
@@ -39,13 +40,15 @@ pub fn execute_if(
 
     // handle condition
     if condition_result {
-        let signal = executor(body.statements, variable_hashmap);
+        let mut if_env = Environment::new_child(env);
+        let signal = executor(body.statements, &mut if_env);
         if signal != Signal::None {
             return signal;
         }
     } else if !elif_branches.is_empty() {
         for elif_block in elif_branches {
-            let signal = execute_if(elif_block.0, elif_block.1, vec![], None, variable_hashmap);
+            let mut elif_env = Environment::new_child(env);
+            let signal = execute_if(elif_block.0, elif_block.1, vec![], None, &mut elif_env);
             if signal != Signal::None {
                 return signal;
             }
@@ -53,7 +56,8 @@ pub fn execute_if(
     } else {
         match else_body {
             Some(statement_body) => {
-                let signal = executor(statement_body.statements, variable_hashmap);
+                let mut else_env = Environment::new_child(env);
+                let signal = executor(statement_body.statements, &mut else_env);
                 if signal != Signal::None {
                     return signal;
                 }

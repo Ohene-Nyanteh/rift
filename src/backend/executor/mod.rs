@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::backend::{
+    environment::Environment,
     executor::handlers::{
         h_expressions::execute_expressions,
         h_if::execute_if,
@@ -9,7 +10,7 @@ use crate::backend::{
         h_variables::{execute_update_variable, execute_variables},
         h_while::execute_while,
     },
-    nodes::{Identifier, Signal, Statement},
+    nodes::{Signal, Statement},
 };
 
 pub mod handlers;
@@ -22,18 +23,18 @@ pub enum Value {
     Str(String),
 }
 
-pub fn executor(ast: Vec<Statement>, variable_hashmap: &mut HashMap<Identifier, Value>) -> Signal {
+pub fn executor(ast: Vec<Statement>, env: &Rc<RefCell<Environment>>) -> Signal {
     for statement in ast {
         match statement {
             Statement::Print(exp) => {
-                let value = execute_expressions(exp, variable_hashmap);
+                let value = execute_expressions(exp, env);
                 execute_print(value);
             }
             Statement::Let(let_decl) => {
-                execute_variables(let_decl, variable_hashmap);
+                execute_variables(let_decl, env);
             }
             Statement::Expression(exp) => {
-                execute_expressions(exp, variable_hashmap);
+                execute_expressions(exp, env);
             }
             Statement::If {
                 body,
@@ -41,24 +42,23 @@ pub fn executor(ast: Vec<Statement>, variable_hashmap: &mut HashMap<Identifier, 
                 elif_branches,
                 else_body,
             } => {
-                let signal =
-                    execute_if(condition, body, elif_branches, else_body, variable_hashmap);
+                let signal = execute_if(condition, body, elif_branches, else_body, env);
                 if signal != Signal::None {
                     return signal;
                 }
             }
             Statement::While { condition, body } => {
-                execute_while(condition, body, variable_hashmap);
+                execute_while(condition, body, env);
             }
             Statement::VariableAssignment { var, exp } => {
-                execute_update_variable(var, exp, variable_hashmap);
+                execute_update_variable(var, exp, env);
             }
             Statement::Loop {
                 variable,
                 body,
                 value,
             } => {
-                execute_loop(variable, body, value, variable_hashmap);
+                execute_loop(variable, body, value, env);
             }
             Statement::Break => return Signal::Break,
             Statement::Continue => return Signal::Continue,

@@ -1,17 +1,18 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::backend::{
+    environment::Environment,
     executor::{Value, executor, handlers::h_expressions::execute_expressions},
-    nodes::{Block, Expression, Identifier, Signal},
+    nodes::{Block, Expression, Signal},
 };
 
 pub fn execute_while(
     condition: Box<Expression>,
     body: Block,
-    variable_hashmap: &mut HashMap<Identifier, Value>,
+    env: &Rc<RefCell<Environment>>,
 ) -> Signal {
     loop {
-        let condition_result = match execute_expressions(condition.clone(), variable_hashmap) {
+        let condition_result = match execute_expressions(condition.clone(), env) {
             Value::Bool(v) => v,
             Value::Float(v) => {
                 if v > 0.0 {
@@ -36,15 +37,15 @@ pub fn execute_while(
             }
         };
 
-        if condition_result == true {
-            let signal = executor(body.statements.clone(), variable_hashmap);
-            match signal {
-                Signal::Break => break,
-                Signal::Continue => continue,
-                Signal::None => {}
-            }
-        } else {
+        if !condition_result {
             break;
+        }
+        let mut while_env = Environment::new_child(env);
+        let signal = executor(body.statements.clone(), &mut while_env);
+        match signal {
+            Signal::Break => break,
+            Signal::Continue => continue,
+            Signal::None => {}
         }
     }
     Signal::None

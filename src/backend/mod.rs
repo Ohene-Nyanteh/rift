@@ -1,4 +1,5 @@
 pub mod config;
+pub mod environment;
 pub mod errors;
 pub mod executor;
 pub mod lexer;

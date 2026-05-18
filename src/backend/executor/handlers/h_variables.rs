@@ -1,31 +1,26 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::backend::{
+    environment::Environment,
     executor::{Value, handlers::h_expressions::execute_expressions},
     nodes::{Expression, Identifier, LetDecl},
 };
 
-pub fn execute_variables(
-    let_decl: Box<LetDecl>,
-    variable_hashmap: &mut HashMap<Identifier, Value>,
-) {
-    let declaration = execute_expressions(
-        let_decl.value.expect("Error getting declation"),
-        variable_hashmap,
-    );
+pub fn execute_variables(let_decl: Box<LetDecl>, env: &Rc<RefCell<Environment>>) {
+    let declaration = execute_expressions(let_decl.value.expect("Error getting declation"), env);
 
     match declaration {
         Value::Bool(v) => {
-            variable_hashmap.insert(let_decl.name, Value::Bool(v));
+            env.borrow_mut().define(let_decl.name, Value::Bool(v));
         }
         Value::Int(v) => {
-            variable_hashmap.insert(let_decl.name, Value::Int(v));
+            env.borrow_mut().define(let_decl.name, Value::Int(v));
         }
         Value::Float(v) => {
-            variable_hashmap.insert(let_decl.name, Value::Float(v));
+            env.borrow_mut().define(let_decl.name, Value::Float(v));
         }
         Value::Str(v) => {
-            variable_hashmap.insert(let_decl.name, Value::Str(v));
+            env.borrow_mut().define(let_decl.name, Value::Str(v));
         }
     }
 }
@@ -33,18 +28,10 @@ pub fn execute_variables(
 pub fn execute_update_variable(
     var: Identifier,
     exp: Box<Expression>,
-    variable_hashmap: &mut HashMap<Identifier, Value>,
+    env: &Rc<RefCell<Environment>>,
 ) {
-    let exp_result = execute_expressions(exp, variable_hashmap);
-
-    match variable_hashmap.contains_key(&var) {
-        true => {
-            // update the variable
-            variable_hashmap.insert(var, exp_result);
-        }
-        false => {
-            let n = var.0;
-            println!("Error: Variable {n} not declared!");
-        }
+    let exp_result = execute_expressions(exp, env);
+    if !env.borrow_mut().set(&var, exp_result) {
+        println!("Error: Variable {} not declared!", var.0);
     }
 }

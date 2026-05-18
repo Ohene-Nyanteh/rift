@@ -1,15 +1,13 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::backend::{
+    environment::Environment,
     executor::Value,
-    nodes::{Expression, Identifier},
+    nodes::Expression,
     tokens::{Operations, Primary},
 };
 
-pub fn execute_expressions(
-    expression: Box<Expression>,
-    variable_hashmap: &mut HashMap<Identifier, Value>,
-) -> Value {
+pub fn execute_expressions(expression: Box<Expression>, env: &Rc<RefCell<Environment>>) -> Value {
     match *expression {
         Expression::Literal(value) => match value {
             Primary::Int(v) => Value::Int(v),
@@ -19,7 +17,7 @@ pub fn execute_expressions(
         },
 
         Expression::Unary { op, expr } => {
-            let value = execute_expressions(expr, variable_hashmap);
+            let value = execute_expressions(expr, env);
 
             match op {
                 Operations::Sub => match value {
@@ -37,8 +35,8 @@ pub fn execute_expressions(
             }
         }
         Expression::Binary { op, lhs, rhs } => {
-            let left = execute_expressions(lhs, variable_hashmap);
-            let right = execute_expressions(rhs, variable_hashmap);
+            let left = execute_expressions(lhs, env);
+            let right = execute_expressions(rhs, env);
             match op {
                 Operations::Add => match (left, right) {
                     (Value::Int(a), Value::Int(b)) => Value::Int(a + b),
@@ -127,7 +125,7 @@ pub fn execute_expressions(
         }
 
         Expression::Variable(key) => {
-            let value = variable_hashmap.get_mut(&key);
+            let value = env.borrow_mut().get(&key);
             let var = match value {
                 Some(value) => value,
                 None => {

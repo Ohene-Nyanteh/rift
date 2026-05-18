@@ -22,14 +22,8 @@ impl Parser {
             }
         };
 
-        // skip the first open tag
-        let open_tag = self.next().ok_or(Error::UnexpectedEOF)?;
-        if open_tag.kind != Tokens::NonAtomic(NonAtomic::LParen) {
-            return Err(Error::InvalidSyntax(format!(
-                "Expected a (  got {:?}",
-                open_tag.kind
-            )));
-        }
+        // expect the opening tag
+        self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
 
         // run a simple loop till we see )
         let mut args: Vec<Identifier> = vec![];
@@ -49,14 +43,10 @@ impl Parser {
             }
         }
 
-        let lcurly_token = self.next().ok_or(Error::UnexpectedEOF)?;
-        if lcurly_token.kind != Tokens::NonAtomic(NonAtomic::LCurlyBraces) {
-            return Err(Error::InvalidSyntax(format!(
-                "Expected a )  got {:?}",
-                lcurly_token.kind
-            )));
-        }
+        // expect left curly braces
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
+        // pass the body of the function till you see }
         let mut body: Vec<Statement> = vec![];
         loop {
             match self.peek() {
