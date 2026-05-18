@@ -106,7 +106,7 @@ impl Parser {
                 self.next();
                 self.parse_print()
             }
-            Tokens::Variable(_) => self.parse_variables(),
+            Tokens::Variable(_) => self.parse_variables_or_function_calls(),
             Tokens::EOF => Err(Error::UnexpectedEOF),
             _ => {
                 let expr = self.parse_expressions(0)?;

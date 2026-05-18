@@ -1,3 +1,4 @@
+pub mod h_call;
 pub mod h_expressions;
 pub mod h_fn;
 pub mod h_if;

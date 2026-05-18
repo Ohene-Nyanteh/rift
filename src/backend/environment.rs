@@ -39,6 +39,16 @@ impl Environment {
         }
     }
 
+    pub fn get_fn(&self, key: &Identifier) -> Option<FunctionDecl> {
+        match self.functions.get(key) {
+            Some(fn_decl) => Some(fn_decl.clone()),
+            None => match &self.parent {
+                Some(parent) => parent.borrow().get_fn(key),
+                None => None,
+            },
+        }
+    }
+
     pub fn set(&mut self, key: &Identifier, value: Value) -> bool {
         if self.variables.contains_key(key) {
             self.variables.insert(key.clone(), value);

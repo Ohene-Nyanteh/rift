@@ -1,13 +1,20 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::backend::{
-    environment::Environment,
-    executor::Value,
-    nodes::Expression,
-    tokens::{Operations, Primary},
+use crate::{
+    StackFrame,
+    backend::{
+        environment::Environment,
+        executor::{Value, handlers::h_call::execute_fn_call},
+        nodes::{Expression, Signal},
+        tokens::{Operations, Primary},
+    },
 };
 
-pub fn execute_expressions(expression: Box<Expression>, env: &Rc<RefCell<Environment>>) -> Value {
+pub fn execute_expressions(
+    expression: Box<Expression>,
+    env: &Rc<RefCell<Environment>>,
+    call_stack: &mut Vec<StackFrame>,
+) -> Value {
     match *expression {
         Expression::Literal(value) => match value {
             Primary::Int(v) => Value::Int(v),
@@ -17,7 +24,7 @@ pub fn execute_expressions(expression: Box<Expression>, env: &Rc<RefCell<Environ
         },
 
         Expression::Unary { op, expr } => {
-            let value = execute_expressions(expr, env);
+            let value = execute_expressions(expr, env, call_stack);
 
             match op {
                 Operations::Sub => match value {
@@ -35,8 +42,8 @@ pub fn execute_expressions(expression: Box<Expression>, env: &Rc<RefCell<Environ
             }
         }
         Expression::Binary { op, lhs, rhs } => {
-            let left = execute_expressions(lhs, env);
-            let right = execute_expressions(rhs, env);
+            let left = execute_expressions(lhs, env, call_stack);
+            let right = execute_expressions(rhs, env, call_stack);
             match op {
                 Operations::Add => match (left, right) {
                     (Value::Int(a), Value::Int(b)) => Value::Int(a + b),
@@ -136,6 +143,13 @@ pub fn execute_expressions(expression: Box<Expression>, env: &Rc<RefCell<Environ
             var.clone()
         }
 
-        _ => panic!("Expression type not supported yet"),
+        Expression::FnCall(fn_call) => {
+            let value = match execute_fn_call(fn_call.callee, fn_call.args, env, call_stack) {
+                Signal::Return(v) => v,
+                _ => Value::Int(0),
+            };
+
+            value
+        }
     }
 }

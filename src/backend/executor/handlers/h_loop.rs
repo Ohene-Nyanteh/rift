@@ -1,9 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::backend::{
-    environment::Environment,
-    executor::{Value, executor, handlers::h_expressions::execute_expressions},
-    nodes::{Block, Expression, Signal},
+use crate::{
+    StackFrame,
+    backend::{
+        environment::Environment,
+        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        nodes::{Block, Expression, Signal},
+    },
 };
 
 pub fn execute_loop(
@@ -11,8 +14,9 @@ pub fn execute_loop(
     body: Block,
     value: Box<Expression>,
     env: &Rc<RefCell<Environment>>,
+    call_stack: &mut Vec<StackFrame>,
 ) {
-    let iter_value = match execute_expressions(value, env) {
+    let iter_value = match execute_expressions(value, env, call_stack) {
         Value::Int(v) => v,
         Value::Bool(_) => 0,
         Value::Str(_) => 0,
@@ -33,7 +37,7 @@ pub fn execute_loop(
 
     loop {
         let mut loop_env = Environment::new_child(env);
-        let signal = executor(body.statements.clone(), &mut loop_env);
+        let signal = executor(body.statements.clone(), &mut loop_env, call_stack);
         if signal == Signal::Break {
             break;
         }

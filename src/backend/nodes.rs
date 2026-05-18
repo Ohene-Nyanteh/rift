@@ -1,3 +1,5 @@
+use crate::backend::executor::Value;
+
 use super::tokens::{Operations, Primary};
 
 #[derive(Debug, Clone)]
@@ -6,6 +8,7 @@ pub enum Statement {
     Let(Box<LetDecl>),
     Enum(Box<EnumDecl>),
     Struct(Box<StructDecl>),
+    FnCall(Box<Call>),
     If {
         condition: Box<Expression>,
         body: Block,
@@ -83,10 +86,13 @@ pub enum Expression {
     },
     Literal(Primary),
     Variable(Identifier),
-    Call {
-        callee: Identifier,
-        args: Vec<Expression>,
-    },
+    FnCall(Box<Call>),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Call {
+    pub callee: Identifier,
+    pub args: Vec<Expression>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -94,7 +100,7 @@ pub enum Signal {
     None,
     Break,
     Continue,
-    // Return(Value)
+    Return(Value),
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]

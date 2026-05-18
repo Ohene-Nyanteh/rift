@@ -1,11 +1,13 @@
-let a = 0;
-while (true) {
-    if (a > 20) {
-        break;
-    }
-    a = a + 1;
-    if (a == 6) {
-        continue;
-    }
-    print(a);
+fn print_names(name, b) {
+    print(name + b);
 }
+
+fn print_all_names(name, a) {
+    print_names(name, a);
+    print_names(name, a);
+    print_names(name, a);
+    print_names(name, a);
+
+}
+
+print_all_names("Ohene", 20);
