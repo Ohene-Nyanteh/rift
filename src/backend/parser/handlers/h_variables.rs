@@ -21,7 +21,7 @@ impl Parser {
         // expect `=`
         let eq_token = self.next().ok_or(Error::UnexpectedEOF)?;
         if eq_token.kind != Tokens::NonAtomic(NonAtomic::Assignment) {
-            return Err(Error::InvalidSyntax("Expected = ".to_string()));
+            return Err(Error::InvalidSyntax("Expected = eee".to_string()));
         }
 
         // parse the value

@@ -6,6 +6,5 @@ pub fn execute_print(value: Value) {
         Value::Int(v) => println!("{}", v),
         Value::Float(v) => println!("{}", v),
         Value::Str(v) => println!("{}", v),
-        Value::Char(v) => println!("{}", v),
     }
 }

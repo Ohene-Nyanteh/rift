@@ -27,12 +27,6 @@ pub fn execute_variables(
         Value::Str(v) => {
             variable_hashmap.insert(let_decl.name, Value::Str(v));
         }
-        Value::Char(v) => {
-            variable_hashmap.insert(let_decl.name, Value::Char(v));
-        }
-        _ => {
-            println!("Error parsing var")
-        }
     }
 }
 

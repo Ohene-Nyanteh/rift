@@ -1,6 +1,6 @@
 use crate::backend::{
     errors::Error,
-    nodes::{Expression, Identifier, Statement},
+    nodes::Statement,
     parser::Parser,
     tokens::{NonAtomic, Primary, Tokens},
 };
@@ -14,13 +14,11 @@ impl Parser {
         let value = match self.peek() {
             None => return Err(Error::UnexpectedEOF)?,
             Some(v) => match v.clone().kind {
-                Tokens::Atomic(_) | Tokens::Variable(_) => match self.parse_expressions(0) {
-                    Ok(exp) => exp,
-                    Err(_) => panic!("Error parsing expression"),
-                },
-                Tokens::Primary(value) => {
-                    self.next();
-                    Box::new(Expression::Literal(value))
+                Tokens::Atomic(_) | Tokens::Variable(_) | Tokens::Primary(_) => {
+                    match self.parse_expressions(0) {
+                        Ok(exp) => exp,
+                        Err(_) => panic!("Error parsing expression"),
+                    }
                 }
                 unexpected => {
                     return Err(Error::UnexpectedToken {

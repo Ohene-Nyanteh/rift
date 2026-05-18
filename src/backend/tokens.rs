@@ -7,8 +7,8 @@ pub enum Operations {
     And,
     Or,
     Not,
-    Xor,
-    Nor,
+    // Xor,
+    // Nor,
     GreaterThan,
     LessThan,
     GreaterOrEquals,
@@ -24,7 +24,6 @@ pub enum Primary {
     Bool(bool),
     Float(f64),
     Str(String),
-    Char(char), // to do
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -40,6 +39,8 @@ pub enum Keywords {
     Continue,
     Match,
     Enum,
+    Loop,
+    From,
     Struct,
     Return,
     Print,

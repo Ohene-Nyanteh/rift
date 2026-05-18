@@ -16,6 +16,11 @@ pub enum Statement {
         condition: Box<Expression>,
         body: Block,
     },
+    Loop {
+        variable: Box<Expression>,
+        body: Block,
+        value: Box<Expression>,
+    },
     For {
         var: Identifier,
         iterable: Box<Expression>,
@@ -35,7 +40,6 @@ pub enum Statement {
         exp: Box<Expression>,
     },
 }
-
 #[derive(Debug, Clone)]
 pub struct FunctionDecl {
     pub name: Identifier,
@@ -83,6 +87,14 @@ pub enum Expression {
         callee: Identifier,
         args: Vec<Expression>,
     },
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Signal {
+    None,
+    Break,
+    Continue,
+    // Return(Value)
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]

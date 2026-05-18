@@ -1,7 +1,7 @@
 use std::panic;
 
 use crate::backend::errors::Error;
-use crate::backend::nodes::{Expression, Identifier, LetDecl, Statement};
+use crate::backend::nodes::{Identifier, LetDecl, Statement};
 use crate::backend::parser::Parser;
 use crate::backend::tokens::{NonAtomic, Tokens};
 
@@ -27,12 +27,6 @@ impl Parser {
         }
 
         // parse the value
-        // let value_token = self.next().ok_or(Error::UnexpectedEOF)?;
-        // let value = match &value_token.kind {
-        //     Tokens::Primary(val) => Expression::Literal(val.clone()),
-        //     _ => return Err(Error::InvalidSyntax("Expected a value ".to_string())),
-        // };
-
         let exp = self.parse_expressions(0);
         let value = match exp {
             Ok(value) => *value,

@@ -6,3 +6,11 @@
   - Variables
   - print <done>
 -
+
+
+
+```bash
+loop number from 1 {
+}
+
+```

@@ -16,7 +16,6 @@ pub fn execute_expressions(
             Primary::Float(v) => Value::Float(v),
             Primary::Bool(v) => Value::Bool(v),
             Primary::Str(v) => Value::Str(v),
-            Primary::Char(v) => Value::Char(v),
         },
 
         Expression::Unary { op, expr } => {
@@ -40,14 +39,15 @@ pub fn execute_expressions(
         Expression::Binary { op, lhs, rhs } => {
             let left = execute_expressions(lhs, variable_hashmap);
             let right = execute_expressions(rhs, variable_hashmap);
-
             match op {
                 Operations::Add => match (left, right) {
                     (Value::Int(a), Value::Int(b)) => Value::Int(a + b),
                     (Value::Float(a), Value::Float(b)) => Value::Float(a + b),
                     (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 + b),
                     (Value::Float(a), Value::Int(b)) => Value::Float(a + b as f64),
-
+                    (Value::Str(a), Value::Int(b)) => Value::Str(a + &b.to_string()),
+                    (Value::Str(a), Value::Float(b)) => Value::Str(a + &b.to_string()),
+                    (Value::Str(a), Value::Bool(b)) => Value::Str(a + &b.to_string()),
                     (Value::Str(a), Value::Str(b)) => Value::Str(a + &b),
 
                     _ => panic!("Invalid types for +"),

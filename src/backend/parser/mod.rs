@@ -3,6 +3,7 @@ use super::nodes::Statement;
 use crate::backend::tokens::{Keywords, NonAtomic, Token, Tokens};
 pub mod handlers;
 
+#[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
@@ -76,6 +77,10 @@ impl Parser {
             Tokens::Keyword(Keywords::For) => {
                 self.next();
                 self.parse_for()
+            }
+            Tokens::Keyword(Keywords::Loop) => {
+                self.next();
+                self.parse_loop()
             }
             Tokens::Keyword(Keywords::Return) => {
                 self.next();

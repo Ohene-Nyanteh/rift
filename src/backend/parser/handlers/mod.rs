@@ -6,6 +6,7 @@ pub mod h_fn;
 pub mod h_for;
 pub mod h_if;
 pub mod h_let;
+pub mod h_loop;
 pub mod h_match;
 pub mod h_print;
 pub mod h_return;

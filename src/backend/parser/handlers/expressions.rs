@@ -18,9 +18,6 @@ impl Parser {
                 Box::new(Expression::Literal(Primary::Bool(val)))
             }
             Tokens::Primary(Primary::Str(val)) => Box::new(Expression::Literal(Primary::Str(val))),
-            Tokens::Primary(Primary::Char(val)) => {
-                Box::new(Expression::Literal(Primary::Char(val)))
-            }
             Tokens::Variable(name) => Box::new(Expression::Variable(Identifier(name))),
 
             // unary: -x or !x
@@ -99,8 +96,8 @@ fn infix_binding_power(op: &Operations) -> Option<(u8, u8)> {
     match op {
         // logical — lowest precedence
         Operations::Or => Some((1, 2)),
-        Operations::Nor => Some((1, 2)),
-        Operations::Xor => Some((1, 2)),
+        // Operations::Nor => Some((1, 2)),
+        // Operations::Xor => Some((1, 2)),
         Operations::And => Some((3, 4)),
 
         // comparison — middle

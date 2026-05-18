@@ -48,15 +48,15 @@ impl Parser {
 impl Parser {
     // parses (expression) — used by if/while
     fn parse_condition(&mut self) -> Result<Box<crate::backend::nodes::Expression>, Error> {
-        self.expect_token(Tokens::NonAtomic(NonAtomic::LParen))?;
+        self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
         let condition = self.parse_expressions(0)?;
-        self.expect_token(Tokens::NonAtomic(NonAtomic::RParen))?;
+        self.expect(Tokens::NonAtomic(NonAtomic::RParen))?;
         Ok(condition)
     }
 
     // parses { statements }
     pub fn parse_block(&mut self) -> Result<Block, Error> {
-        self.expect_token(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
         let mut statements: Vec<Statement> = vec![];
         loop {
             match self.peek() {
@@ -79,20 +79,5 @@ impl Parser {
             }
         }
         Ok(Block { statements })
-    }
-
-    fn expect_token(&mut self, expected: Tokens) -> Result<(), Error> {
-        let token = self.next().ok_or(Error::UnexpectedEOF)?;
-        if token.kind != expected {
-            return Err(Error::InvalidSyntax(format!(
-                "Expected {:?}, got {:?}",
-                expected, token.kind
-            )));
-        }
-        Ok(())
-    }
-
-    fn expect_semicolon(&mut self) -> Result<(), Error> {
-        self.expect_token(Tokens::NonAtomic(NonAtomic::SemiColon))
     }
 }
