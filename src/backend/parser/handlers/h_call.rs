@@ -5,35 +5,45 @@ use crate::backend::{
     tokens::{NonAtomic, Tokens},
 };
 
+// fn_call.rs
 impl Parser {
-    pub fn parse_function_call(&mut self, fn_name: Identifier) -> Result<Statement, Error> {
-        // expect a parenthesis next
+    /// Parses a function call as an Expression (no trailing semicolon).
+    /// Used when a call appears inside an expression: return foo(x) + 1
+    pub fn parse_call_expr(&mut self, fn_name: Identifier) -> Result<Expression, Error> {
         self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
 
-        // run a simple loop to store all the args passed until it sees a )
         let mut args: Vec<Expression> = vec![];
         loop {
-            let next_token = self.next().ok_or(Error::UnexpectedEOF)?;
-            match next_token.kind {
-                Tokens::NonAtomic(NonAtomic::RParen) => break,
-                Tokens::Variable(var) => args.push(Expression::Variable(Identifier(var))),
-                Tokens::NonAtomic(NonAtomic::Comma) => continue,
-                Tokens::Primary(value) => args.push(Expression::Literal(value)),
-                unexpected => {
-                    return Err(Error::InvalidSyntax(
-                        format!("Expected a variable, or a value, got {:?}", unexpected)
-                            .to_string(),
-                    ));
+            match self.peek().ok_or(Error::UnexpectedEOF)?.kind.clone() {
+                Tokens::NonAtomic(NonAtomic::RParen) => {
+                    self.next(); // consume )
+                    break;
+                }
+                Tokens::NonAtomic(NonAtomic::Comma) => {
+                    self.next(); // consume ,
+                    continue;
+                }
+                _ => {
+                    // parse a full expression as the argument (handles n-1, n+2, etc.)
+                    let arg = self.parse_expressions(0)?;
+                    args.push(*arg);
                 }
             }
         }
 
-        // expect semicolon
-        self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
-
-        Ok(Statement::FnCall(Box::new(Call {
+        Ok(Expression::FnCall(Box::new(Call {
             callee: fn_name,
-            args: args,
+            args,
         })))
+    }
+
+    /// Parses a standalone function call statement (consumes trailing semicolon).
+    pub fn parse_function_call(&mut self, fn_name: Identifier) -> Result<Statement, Error> {
+        let expr = self.parse_call_expr(fn_name)?;
+        self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
+        match expr {
+            Expression::FnCall(call) => Ok(Statement::FnCall(call)),
+            _ => unreachable!(),
+        }
     }
 }

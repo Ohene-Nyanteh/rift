@@ -1,25 +1,47 @@
 use crate::backend::{
     errors::Error,
-    nodes::{Expression, Identifier},
+    nodes::{Expression, Identifier, Statement},
     parser::Parser,
     tokens::{NonAtomic, Operations, Primary, Tokens},
 };
 
 impl Parser {
     pub fn parse_expressions(&mut self, min_bp: u8) -> Result<Box<Expression>, Error> {
-        let next_token = self.next().ok_or(Error::UnexpectedEOF)?;
+        let next_token = self.peek().ok_or(Error::UnexpectedEOF)?;
 
-        let mut lhs: Box<Expression> = match next_token.kind {
-            Tokens::Primary(Primary::Int(val)) => Box::new(Expression::Literal(Primary::Int(val))),
+        let mut lhs: Box<Expression> = match next_token.kind.clone() {
+            Tokens::Primary(Primary::Int(val)) => {
+                self.next();
+                Box::new(Expression::Literal(Primary::Int(val)))
+            }
             Tokens::Primary(Primary::Float(val)) => {
+                self.next();
                 Box::new(Expression::Literal(Primary::Float(val)))
             }
             Tokens::Primary(Primary::Bool(val)) => {
+                self.next();
                 Box::new(Expression::Literal(Primary::Bool(val)))
             }
-            Tokens::Primary(Primary::Str(val)) => Box::new(Expression::Literal(Primary::Str(val))),
-            Tokens::Variable(name) => Box::new(Expression::Variable(Identifier(name))),
+            Tokens::Primary(Primary::Str(val)) => {
+                self.next();
+                Box::new(Expression::Literal(Primary::Str(val)))
+            }
+            Tokens::Variable(v) => {
+                self.next();
 
+                // check if it's a function call: name(...)
+                match self.peek() {
+                    Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LParen) => {
+                        // parse as a call expression (no semicolon consumed)
+                        let call_expr = self.parse_call_expr(Identifier(v))?;
+                        Box::new(call_expr)
+                    }
+                    _ => {
+                        // plain variable reference
+                        Box::new(Expression::Variable(Identifier(v)))
+                    }
+                }
+            }
             // unary: -x or !x
             Tokens::Atomic(Operations::Sub) => {
                 let expr = self.parse_expressions(7)?; // higher than everything else

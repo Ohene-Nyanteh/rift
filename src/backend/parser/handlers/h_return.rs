@@ -7,7 +7,6 @@ use crate::backend::{
 
 impl Parser {
     pub fn parse_return(&mut self) -> Result<Statement, Error> {
-        // if next token is ; or } return nothing
         match self.peek() {
             Some(Token {
                 kind: Tokens::NonAtomic(NonAtomic::SemiColon),
@@ -17,7 +16,7 @@ impl Parser {
                 kind: Tokens::NonAtomic(NonAtomic::RCurlyBraces),
                 ..
             }) => {
-                self.next(); // consume the semicolon
+                self.next();
                 return Ok(Statement::Return(None));
             }
             _ => {}
@@ -25,7 +24,7 @@ impl Parser {
 
         let value = self.parse_expressions(0)?;
 
-        // consume ;
+        // only consume semicolon; the expression already consumed everything else
         match self.next() {
             Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::SemiColon) => {}
             Some(t) => {
