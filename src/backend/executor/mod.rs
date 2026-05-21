@@ -26,6 +26,7 @@ pub enum Value {
     Float(f64),
     Bool(bool),
     Str(String),
+    Array(Vec<Value>),
 }
 
 pub fn executor(

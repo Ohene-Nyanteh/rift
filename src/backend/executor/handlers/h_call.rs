@@ -27,7 +27,7 @@ pub fn execute_fn_call(
     call_stack.push(fn_frame);
 
     // get function body next
-    let function = match env.borrow_mut().get_fn(&callee) {
+    let function = match env.borrow().get_fn(&callee) {
         Some(f) => f,
         None => panic!("Error: Couldn't find function"),
     };
@@ -44,6 +44,7 @@ pub fn execute_fn_call(
                 args.len()
             ),
         };
+        // inserting into variables needs borrow_mut
         let _ = fn_env.borrow_mut().variables.insert(key.clone(), value);
     }
 

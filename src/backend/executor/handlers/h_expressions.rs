@@ -132,7 +132,7 @@ pub fn execute_expressions(
         }
 
         Expression::Variable(key) => {
-            let value = env.borrow_mut().get(&key);
+            let value = env.borrow().get(&key);
             let var = match value {
                 Some(value) => value,
                 None => {
@@ -150,6 +150,26 @@ pub fn execute_expressions(
             };
 
             value
+        }
+
+        Expression::ArrayLiteral(items) => {
+            let values = items
+                .into_iter()
+                .map(|item| execute_expressions(item, env, call_stack))
+                .collect();
+            Value::Array(values)
+        }
+
+        Expression::ArrayIndex { target, index } => {
+            let arr = match execute_expressions(target, env, call_stack) {
+                Value::Array(v) => v,
+                _ => panic!("Cannot index into a non-array"),
+            };
+            let idx = match execute_expressions(index, env, call_stack) {
+                Value::Int(i) => i as usize,
+                _ => panic!("Array index must be an integer"),
+            };
+            arr[idx].clone()
         }
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, handlers::h_expressions::execute_expressions},
+        executor::handlers::h_expressions::execute_expressions,
         nodes::{Expression, Identifier, LetDecl},
     },
 };
@@ -15,25 +15,12 @@ pub fn execute_variables(
     call_stack: &mut Vec<StackFrame>,
 ) {
     let declaration = execute_expressions(
-        let_decl.value.expect("Error getting declation"),
+        let_decl.value.expect("Error getting declaration"),
         env,
         call_stack,
     );
 
-    match declaration {
-        Value::Bool(v) => {
-            env.borrow_mut().define(let_decl.name, Value::Bool(v));
-        }
-        Value::Int(v) => {
-            env.borrow_mut().define(let_decl.name, Value::Int(v));
-        }
-        Value::Float(v) => {
-            env.borrow_mut().define(let_decl.name, Value::Float(v));
-        }
-        Value::Str(v) => {
-            env.borrow_mut().define(let_decl.name, Value::Str(v));
-        }
-    }
+    env.borrow_mut().define(let_decl.name, declaration);
 }
 
 pub fn execute_update_variable(

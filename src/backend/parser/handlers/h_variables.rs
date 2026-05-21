@@ -23,6 +23,7 @@ impl Parser {
 
         match next_token.kind.clone() {
             Tokens::NonAtomic(NonAtomic::Assignment) => self.parse_variables(name),
+            Tokens::NonAtomic(NonAtomic::LSquareBraces) => self.parse_array_index(name),
             Tokens::NonAtomic(NonAtomic::LParen) => self.parse_function_call(name),
             unexpected => {
                 return Err(Error::InvalidSyntax(format!(

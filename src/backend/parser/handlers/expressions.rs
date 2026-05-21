@@ -1,6 +1,6 @@
 use crate::backend::{
     errors::Error,
-    nodes::{Expression, Identifier, Statement},
+    nodes::{Expression, Identifier},
     parser::Parser,
     tokens::{NonAtomic, Operations, Primary, Tokens},
 };
@@ -26,6 +26,11 @@ impl Parser {
                 self.next();
                 Box::new(Expression::Literal(Primary::Str(val)))
             }
+            Tokens::NonAtomic(NonAtomic::LSquareBraces) => {
+                self.next();
+                let array = self.handle_arrays()?;
+                Box::new(array)
+            }
             Tokens::Variable(v) => {
                 self.next();
 
@@ -35,6 +40,11 @@ impl Parser {
                         // parse as a call expression (no semicolon consumed)
                         let call_expr = self.parse_call_expr(Identifier(v))?;
                         Box::new(call_expr)
+                    }
+                    Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LSquareBraces) => {
+                        // parse the array index with no semi colon
+                        let array_index_exp = self.parse_array_index_expr(Identifier(v))?;
+                        Box::new(array_index_exp)
                     }
                     _ => {
                         // plain variable reference

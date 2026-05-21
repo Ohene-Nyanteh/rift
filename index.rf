@@ -1,8 +1,11 @@
-fn fib_sequence(n) {
-    if (n <= 1) {
-        return n;
-    }
-    return fib_sequence(n-1) + fib_sequence(n-2);
+let score = 75;
+
+if (score >= 90) {
+    print("A");
+} elif (score >= 75) {
+    print("B");
+} elif (score >= 60) {
+    print("C");
+} else {
+    print("F");
 }
-let fib = fib_sequence(10);
-print(fib);

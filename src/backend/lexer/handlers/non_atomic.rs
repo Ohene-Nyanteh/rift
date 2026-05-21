@@ -75,7 +75,7 @@ pub fn handle_non_atomic(
         }
         '[' | ']' => {
             *index += 1;
-            let kind = if *current_char == '(' {
+            let kind = if *current_char == '[' {
                 NonAtomic::LSquareBraces
             } else {
                 NonAtomic::RSquareBraces

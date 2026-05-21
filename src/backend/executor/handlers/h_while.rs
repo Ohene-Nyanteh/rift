@@ -39,6 +39,13 @@ pub fn execute_while(
                     false
                 }
             }
+            Value::Array(v) => {
+                if v.len() != 0 {
+                    true
+                } else {
+                    false
+                }
+            }
         };
 
         if !condition_result {

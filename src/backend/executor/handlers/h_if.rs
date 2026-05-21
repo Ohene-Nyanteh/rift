@@ -40,6 +40,14 @@ pub fn execute_if(
                 false
             }
         }
+
+        Value::Array(v) => {
+            if v.len() != 0 {
+                true
+            } else {
+                false
+            }
+        }
     };
 
     // handle condition
@@ -51,15 +59,28 @@ pub fn execute_if(
         }
     } else if !elif_branches.is_empty() {
         for elif_block in elif_branches {
-            let mut elif_env = Environment::new_child(env);
-            let signal = execute_if(
-                elif_block.0,
-                elif_block.1,
-                vec![],
-                None,
-                &mut elif_env,
-                call_stack,
-            );
+            let condition_result = match execute_expressions(elif_block.0, env, call_stack) {
+                Value::Bool(v) => v,
+                Value::Float(v) => v > 0.0,
+                Value::Int(v) => v > 0,
+                Value::Str(v) => v.len() != 0,
+                Value::Array(v) => v.len() != 0,
+            };
+
+            if condition_result {
+                let mut elif_env = Environment::new_child(env);
+                let signal = executor(elif_block.1.statements, &mut elif_env, call_stack);
+                if signal != Signal::None {
+                    return signal;
+                }
+                return Signal::None; // matched and ran — stop here
+            }
+        }
+
+        // no elif matched, run else if present
+        if let Some(statement_body) = else_body {
+            let mut else_env = Environment::new_child(env);
+            let signal = executor(statement_body.statements, &mut else_env, call_stack);
             if signal != Signal::None {
                 return signal;
             }

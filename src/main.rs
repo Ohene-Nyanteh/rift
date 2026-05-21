@@ -23,8 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     };
 
-    // println!("{tokens:#?}");
-
     let mut parser = Parser::new(tokens);
     let ast = parser.parse_code()?;
 

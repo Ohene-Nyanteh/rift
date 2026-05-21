@@ -30,14 +30,11 @@ impl Parser {
         let exp = self.parse_expressions(0);
         let value = match exp {
             Ok(value) => *value,
-            Err(_) => panic!("Error: Couldnt Parse "),
+            Err(err) => panic!("Error: Couldnt Parse the Value {err:?}"),
         };
 
         // expect `;`
-        let semi_token = self.next().ok_or(Error::UnexpectedEOF)?;
-        if semi_token.kind != Tokens::NonAtomic(NonAtomic::SemiColon) {
-            return Err(Error::InvalidSyntax("Expected a ; ".to_string()));
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
 
         Ok(Statement::Let(Box::new(LetDecl {
             name: name,
