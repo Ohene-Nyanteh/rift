@@ -1,11 +1,16 @@
-let score = 75;
-
-if (score >= 90) {
-    print("A");
-} elif (score >= 75) {
-    print("B");
-} elif (score >= 60) {
-    print("C");
-} else {
-    print("F");
+fn fib(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
 }
+
+fn print_fib(i, limit) {
+    if (i >= limit) {
+        return 0;
+    }
+    print(fib(i));
+    print_fib(i + 1, limit);
+}
+
+print_fib(0, 10);

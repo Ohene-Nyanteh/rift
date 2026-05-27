@@ -73,7 +73,7 @@ pub fn execute_if(
                 if signal != Signal::None {
                     return signal;
                 }
-                return Signal::None; // matched and ran — stop here
+                return Signal::None;
             }
         }
 
