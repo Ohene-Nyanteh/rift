@@ -152,6 +152,9 @@ pub fn execute_expressions(
             value
         }
 
+        // Expression::EnumCall { name, variant } => {
+
+        // },
         Expression::ArrayLiteral(items) => {
             let values = items
                 .into_iter()
@@ -170,6 +173,27 @@ pub fn execute_expressions(
                 _ => panic!("Array index must be an integer"),
             };
             arr[idx].clone()
+        }
+
+        Expression::EnumCall { name, variant } => {
+            let var = env.borrow().get(&name);
+            let variants = match var {
+                Some(value) => value,
+                None => {
+                    panic!("Enum value doesn't exist");
+                }
+            };
+
+            let is_in_var = match variants {
+                Value::Enum(v) => v.contains(&Value::Str(variant.0.clone())),
+                unexpected => panic!("Expected An Enum, got a {unexpected:?}"),
+            };
+
+            if !is_in_var {
+                panic!("Variant doesnt exist in Enum")
+            }
+
+            Value::Str(variant.0)
         }
     }
 }

@@ -6,6 +6,7 @@ use crate::{
         environment::Environment,
         executor::handlers::{
             h_call::execute_fn_call,
+            h_enums::execute_enums,
             h_expressions::execute_expressions,
             h_fn::execute_fn,
             h_if::execute_if,
@@ -27,6 +28,8 @@ pub enum Value {
     Bool(bool),
     Str(String),
     Array(Vec<Value>),
+    Enum(Vec<Value>), // Str(Variant)
+    Stuct(Vec<(Value, Value)>),
 }
 
 pub fn executor(
@@ -78,6 +81,9 @@ pub fn executor(
                 if signal != Signal::None {
                     return signal;
                 }
+            }
+            Statement::Enum(enum_decl) => {
+                execute_enums(enum_decl, env, call_stack);
             }
             Statement::Return(exp) => match exp {
                 Some(expression) => {

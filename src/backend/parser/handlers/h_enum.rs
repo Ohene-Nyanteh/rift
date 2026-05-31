@@ -23,16 +23,7 @@ impl Parser {
         };
 
         // consume {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected {{ got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
         // parse variants until }
         let mut variants: Vec<Identifier> = vec![];
@@ -75,6 +66,8 @@ impl Parser {
                 }
             }
         }
+
+        self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
 
         Ok(Statement::Enum(Box::new(EnumDecl { name, variants })))
     }

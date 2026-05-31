@@ -5,6 +5,7 @@ pub mod h_break;
 pub mod h_call;
 pub mod h_continue;
 pub mod h_enum;
+pub mod h_enum_calls;
 pub mod h_fn;
 pub mod h_for;
 pub mod h_if;

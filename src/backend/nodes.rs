@@ -87,6 +87,10 @@ pub enum Expression {
     Literal(Primary),
     Variable(Identifier),
     FnCall(Box<Call>),
+    EnumCall {
+        name: Identifier,
+        variant: Identifier,
+    },
     ArrayLiteral(Vec<Box<Expression>>),
     ArrayIndex {
         target: Box<Expression>,

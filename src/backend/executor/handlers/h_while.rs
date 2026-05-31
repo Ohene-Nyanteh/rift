@@ -46,6 +46,8 @@ pub fn execute_while(
                     false
                 }
             }
+            Value::Stuct(_) => true,
+            Value::Enum(_) => true,
         };
 
         if !condition_result {

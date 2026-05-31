@@ -6,6 +6,22 @@ fn display_value(value: &Value) -> String {
         Value::Int(v) => v.to_string(),
         Value::Float(v) => v.to_string(),
         Value::Str(v) => format!("\"{}\"", v),
+        Value::Stuct(fields) => {
+            let v = fields
+                .iter()
+                .map(|(k, v)| display_value(k).to_string() + ":" + &display_value(v))
+                .collect::<Vec<_>>()
+                .join(",");
+            format!("{}", v)
+        }
+        Value::Enum(variants) => {
+            let inner = variants
+                .iter()
+                .map(display_value)
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!("{}", inner)
+        }
         Value::Array(items) => {
             let inner = items
                 .iter()

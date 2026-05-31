@@ -46,6 +46,11 @@ impl Parser {
                         let array_index_exp = self.parse_array_index_expr(Identifier(v))?;
                         Box::new(array_index_exp)
                     }
+                    Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::Colon) => {
+                        // parse the enums
+                        let enum_exp = self.parse_enum_calls(Identifier(v))?;
+                        Box::new(enum_exp)
+                    }
                     _ => {
                         // plain variable reference
                         Box::new(Expression::Variable(Identifier(v)))

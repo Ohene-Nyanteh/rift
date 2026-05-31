@@ -48,6 +48,8 @@ pub fn execute_if(
                 false
             }
         }
+        Value::Stuct(_) => true,
+        Value::Enum(_) => true,
     };
 
     // handle condition
@@ -65,6 +67,8 @@ pub fn execute_if(
                 Value::Int(v) => v > 0,
                 Value::Str(v) => v.len() != 0,
                 Value::Array(v) => v.len() != 0,
+                Value::Stuct(_) => true,
+                Value::Enum(_) => true,
             };
 
             if condition_result {

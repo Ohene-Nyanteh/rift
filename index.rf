@@ -1,16 +1,16 @@
-fn fib(n) {
-    if (n <= 1) {
-        return n;
+enum Gender {
+    Male,
+    Female
+};
+
+
+fn test(gender) {
+    if (gender == Gender::Male) {
+        print(Gender::Male);
     }
-    return fib(n - 1) + fib(n - 2);
+    else {
+        print("Fahhh");
+    }
 }
 
-fn print_fib(i, limit) {
-    if (i >= limit) {
-        return 0;
-    }
-    print(fib(i));
-    print_fib(i + 1, limit);
-}
-
-print_fib(0, 10);
+test(Gender::Female);
