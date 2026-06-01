@@ -100,6 +100,11 @@ pub enum Expression {
         target: Identifier,
         field: Identifier,
     },
+    StructAssignment {
+        target: Identifier,
+        field: Identifier,
+        new_value: Box<Expression>,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone)]

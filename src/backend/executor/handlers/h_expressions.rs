@@ -205,5 +205,25 @@ pub fn execute_expressions(
                 unexpected => panic!("Error: Expected a struct, got: {unexpected:?}"),
             }
         }
+
+        Expression::StructAssignment {
+            target,
+            field,
+            new_value,
+        } => {
+            let struct_variable = env.borrow().get(target).expect("Struct doesn't exist");
+            match struct_variable {
+                Value::Struct(mut fields) => {
+                    if !fields.contains_key(&field.0) {
+                        panic!("Struct field '{}' doesn't exist", field.0);
+                    }
+                    let value = execute_expressions(new_value, env, call_stack);
+                    fields.insert(field.0.clone(), value);
+                    env.borrow_mut().set(target, Value::Struct(fields));
+                    Value::Int(0)
+                }
+                unexpected => panic!("Error: Expected a struct, got: {unexpected:?}"),
+            }
+        }
     }
 }
