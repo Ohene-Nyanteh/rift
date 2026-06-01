@@ -63,6 +63,7 @@ impl Parser {
             }
             // unary: -x or !x
             Tokens::Atomic(Operations::Sub) => {
+                self.next();
                 let expr = self.parse_expressions(7)?; // higher than everything else
                 Box::new(Expression::Unary {
                     op: Operations::Sub,
@@ -70,6 +71,7 @@ impl Parser {
                 })
             }
             Tokens::Atomic(Operations::Not) => {
+                self.next();
                 let expr = self.parse_expressions(7)?;
                 Box::new(Expression::Unary {
                     op: Operations::Not,
@@ -79,6 +81,7 @@ impl Parser {
 
             // grouped expression: (2 + 3)
             Tokens::NonAtomic(NonAtomic::LParen) => {
+                self.next();
                 let inner = self.parse_expressions(0)?;
                 self.expect_rparen()?; // consume the closing )
                 inner

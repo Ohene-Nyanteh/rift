@@ -27,6 +27,7 @@ impl Parser {
             Tokens::NonAtomic(NonAtomic::LParen) => self.parse_function_call(name),
             Tokens::NonAtomic(NonAtomic::Dot) => {
                 let value = self.parse_struct_call(name)?;
+                self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
                 Ok(Statement::Expression(value))
             }
             // Tokens::NonAtomic(NonAtomic::Colon) => self.parse_enum_calls(name),

@@ -41,11 +41,6 @@ impl Parser {
             });
         };
 
-        // if there is a comma just consume it
-        let next_token = self.peek().ok_or(Error::UnexpectedEOF)?;
-        if next_token.kind == Tokens::NonAtomic(NonAtomic::SemiColon) {
-            self.next().ok_or(Error::UnexpectedEOF)?;
-        };
         Ok(statement_exp)
     }
 }

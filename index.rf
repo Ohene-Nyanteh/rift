@@ -1,12 +1,132 @@
-struct Point {
-    x: 0,
-    y: 0,
-    z: 0
+# ==========================================
+# Rift Inventory & Order Processing System
+# ==========================================
+
+# 1. Define types
+enum ItemCategory {
+    Electronics,
+    Clothing,
+    Books
 }
 
-let p = Point;
-p.x = 10;
-p.y = 20;
+struct Item {
+    id: 0,
+    price: 0.0,
+    stock: 0,
+    category: ItemCategory::Electronics
+}
 
-print(p.x);  # 10
-print(p.z);  # 0
+# 2. Helper function to simulate fetching item price and availability
+fn process_order(item_id, quantity, current_stock, unit_price) {
+    print("--- Processing Order ---");
+    print("Item ID: " + item_id);
+    print("Requested Quantity: " + quantity);
+
+    if (quantity > current_stock) {
+        print("Status: REJECTED - Insufficient stock!");
+        return -1; # Error code for failure
+    }
+
+    let total_cost = unit_price * quantity;
+
+    # Apply bulk discounts using conditional logic
+    if (quantity >= 10) {
+        print("Bulk discount applied (10%)!");
+        total_cost = total_cost * 0.9;
+    } elif (quantity >= 5) {
+        print("Bulk discount applied (5%)!");
+        total_cost = total_cost * 0.95;
+    }
+
+    print("Status: APPROVED");
+    print("Total Cost: " + total_cost);
+
+    return total_cost;
+}
+
+# 3. Main Logic Execution
+fn main() {
+    print("\n\nInitializing Rift Inventory System...");
+
+    # Setup Item 1: High-end Headphones
+    let headphones = Item;
+    headphones.id = 101;
+    headphones.price = 149.99;
+    headphones.stock = 12;
+    headphones.category = ItemCategory::Electronics;
+
+    # Setup Item 2: Developer Hoodie
+    let hoodie = Item;
+    hoodie.id = 204;
+    hoodie.price = 45.00;
+    hoodie.stock = 4;
+    hoodie.category = ItemCategory::Clothing;
+
+    # Track overall daily sales revenue
+    let total_revenue = 0.0;
+
+    # Simulated Batch Order Queue: [Item_ID, Quantity_Requested]
+    # We will simulate processing a stream of incoming orders
+    print("");
+    print("=== Processing Batch Orders ===");
+
+    # Order 1: Bulk order for Headphones
+    let order1_cost = process_order(headphones.id, 10, headphones.stock, headphones.price);
+    if (order1_cost != -1) {
+        headphones.stock = headphones.stock - 10;
+        total_revenue = total_revenue + order1_cost;
+    }
+    print("Remaining Stock: " + headphones.stock);
+    print("");
+
+    # Order 2: Over-purchasing hoodies
+    let order2_cost = process_order(hoodie.id, 5, hoodie.stock, hoodie.price);
+    if (order2_cost != -1) {
+        hoodie.stock = hoodie.stock - 5;
+        total_revenue = total_revenue + order2_cost;
+    }
+    print("Remaining Stock: " + hoodie.stock);
+    print("");
+
+    # 4. Demonstrate Match Statement with Enums & Categories
+    print("=== Category Shipping Manifest ===");
+
+    # We inspect the hoodie's category using Rift's match control
+    let target_category = hoodie.category;
+
+    match target_category {
+        ItemCategory::Electronics => {
+            print("Route to: Fragile Tech Logistics Bay.");
+        }
+        ItemCategory::Clothing => {
+            print("Route to: Standard Apparel Apparel Warehouse.");
+        }
+        ItemCategory::Books => {
+            print("Route to: Media Media Center.");
+        }
+        default => {
+            print("Route to: General Sorting Facility.");
+        }
+    }
+    print("");
+
+    # 5. Showcase the unique 'loop from' syntax to generate sequential Order Tracking IDs
+    print("=== Generating Tracking IDs for Dispatched Orders ===");
+
+    loop id from 5001 {
+        print("Generated Tracking ID: TX-" + id);
+
+        # Artificial break condition to limit generation to 3 IDs
+        if (id == 5003) {
+            break;
+        }
+    }
+
+    print("");
+    print("==========================================");
+    print("End of Shift Report - Total Revenue: " + total_revenue);
+    print("==========================================");
+}
+
+# Run the program
+main();

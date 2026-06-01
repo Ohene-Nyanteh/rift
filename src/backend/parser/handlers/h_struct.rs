@@ -59,19 +59,10 @@ impl Parser {
                             Tokens::Variable(name) => {
                                 self.expect(Tokens::NonAtomic(NonAtomic::Colon))?;
 
-                                // parse next value: Primary
-                                let value = self.next().ok_or(Error::UnexpectedEOF)?;
-                                match value.kind {
-                                    Tokens::Primary(v) => {
-                                        fields.push((Identifier(name), Expression::Literal(v)))
-                                    }
-                                    error => {
-                                        return Err(Error::InvalidSyntax(format!(
-                                            "Expected field name, got {:?}",
-                                            error
-                                        )))?;
-                                    }
-                                }
+                                // parse next value: Primary / Variable
+                                let token = self.next().ok_or(Error::UnexpectedEOF)?;
+                                let v = self.parse_struct_value_exp(&token, &Identifier(name))?;
+                                fields.push(v);
                             }
                             unexpected => {
                                 return Err(Error::InvalidSyntax(format!(
@@ -96,5 +87,34 @@ impl Parser {
         }
 
         Ok(Statement::Struct(Box::new(StructDecl { name, fields })))
+    }
+
+    fn parse_struct_value_exp(
+        &mut self,
+        token: &Token,
+        name: &Identifier,
+    ) -> Result<(Identifier, Expression), Error> {
+        match token.kind.clone() {
+            Tokens::Primary(v) => Ok((name.clone(), Expression::Literal(v))),
+            Tokens::Variable(var) => {
+                // check if its a normal var or an enum
+                let next_token = self.peek().ok_or(Error::UnexpectedEOF)?;
+                match next_token.kind {
+                    Tokens::NonAtomic(NonAtomic::Colon) => {
+                        let exp = self.parse_enum_calls(Identifier(var))?;
+                        Ok((name.clone(), exp))
+                    }
+                    _ => {
+                        // store it as a normal variable
+                        Ok((name.clone(), Expression::Variable(Identifier(var))))
+                    }
+                }
+            }
+            unexpected => {
+                return Err(Error::InvalidSyntax(format!(
+                    "Expected a variable, value or a enum variant got {unexpected:?}"
+                )));
+            }
+        }
     }
 }
