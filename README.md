@@ -122,8 +122,8 @@ let e = 10 % 3;   # 1
 
 ```
 true && false   # false
-true || false    # true
-!true #false
+true || false   # true
+!true           # false
 ```
 
 ---
@@ -263,6 +263,83 @@ while (i < 10) {
 
 ---
 
+### Enums
+
+Enums define a type with a fixed set of named variants. Declare with `enum`, then reference variants using `::`.
+
+```
+enum Direction {
+    North,
+    South,
+    East,
+    West
+}
+
+let heading = Direction::North;
+```
+
+Enum variants have no sub-values — they are simple named constants belonging to their type.
+
+---
+
+### Structs
+
+Structs group related fields together under a single name. Fields are declared with default values and accessed using dot notation.
+
+```
+struct Point {
+    x: 0,
+    y: 0,
+    z: 0
+}
+
+let p = Point;
+p.x = 10;
+p.y = 20;
+
+print(p.x);  # 10
+print(p.z);  # 0
+```
+
+---
+
+### Match
+
+`match` compares a value against a series of cases and runs the first one that matches. Use `default` to handle any value not explicitly listed. Cases always use curly braces.
+
+```
+let status = 2;
+
+match status {
+    1 => { print("one"); }
+    2 => { print("two"); }
+    default => { print("something else"); }
+}
+```
+
+Match works with any value type — integers, strings, booleans, enum variants, variables, and structs.
+
+```
+enum Season {
+    Spring,
+    Summer,
+    Autumn,
+    Winter
+}
+
+let current = Season::Winter;
+
+match current {
+    Season::Spring => { print("Flowers blooming"); }
+    Season::Summer => { print("Hot outside"); }
+    Season::Autumn => { print("Leaves falling"); }
+    Season::Winter => { print("Cold and dark"); }
+    default => { print("Unknown season"); }
+}
+```
+
+---
+
 ## Full Example
 
 FizzBuzz in Rift:
@@ -288,10 +365,6 @@ while (i <= 20) {
 
 ## Planned Features
 
-- `for` loops
-- `match` statements
-- `enum` types
-- `struct` types
 - Module system
 - Standard library
 

@@ -1,19 +1,12 @@
-enum Result {
-    Ok,
-    Error
-};
-
-
-let res = Result::Ok;
-
-match res {
-    Result::Ok => {
-        print("Hello");
-    },
-    Result::Error => {
-        print("World");
-    }
-    default => {
-        print("Default");
-    }
+struct Point {
+    x: 0,
+    y: 0,
+    z: 0
 }
+
+let p = Point;
+p.x = 10;
+p.y = 20;
+
+print(p.x);  # 10
+print(p.z);  # 0
