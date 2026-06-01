@@ -1,7 +1,19 @@
-struct Person {
-    name: "Ohene",
-    age: 10
+enum Result {
+    Ok,
+    Error
+};
+
+
+let res = Result::Ok;
+
+match res {
+    Result::Ok => {
+        print("Hello");
+    },
+    Result::Error => {
+        print("World");
+    }
+    default => {
+        print("Default");
+    }
 }
-
-
-print(Person.name);

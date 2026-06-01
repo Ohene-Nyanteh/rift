@@ -58,6 +58,7 @@ pub enum NonAtomic {
     LSquareBraces,
     RSquareBraces,
     Assignment,
+    FatArrow,
     Dot,
 }
 

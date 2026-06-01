@@ -6,20 +6,12 @@ use crate::backend::{
 };
 
 impl Parser {
+    // match value {}
     pub fn parse_match(&mut self) -> Result<Statement, Error> {
         let value = self.parse_expressions(0)?;
 
         // consume {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected {{ got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
         let mut arms: Vec<(Box<crate::backend::nodes::Expression>, Block)> = vec![];
 
@@ -39,30 +31,11 @@ impl Parser {
                 _ => {
                     let pattern = self.parse_expressions(0)?;
 
-                    // consume :
-                    match self.next() {
-                        Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::Colon) => {}
-                        Some(t) => {
-                            return Err(Error::InvalidSyntax(format!(
-                                "Expected : got {:?}",
-                                t.kind
-                            )));
-                        }
-                        None => return Err(Error::UnexpectedEOF),
-                    }
+                    // expect =>
+                    self.expect(Tokens::NonAtomic(NonAtomic::FatArrow))?;
 
-                    // consume {
-                    match self.next() {
-                        Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-                        Some(t) => {
-                            return Err(Error::InvalidSyntax(format!(
-                                "Expected {{ got {:?}",
-                                t.kind
-                            )));
-                        }
-                        None => return Err(Error::UnexpectedEOF),
-                    }
-
+                    // expect {
+                    self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
                     // parse arm body until }
                     let mut body: Vec<Statement> = vec![];
                     loop {

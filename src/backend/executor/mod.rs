@@ -12,6 +12,7 @@ use crate::{
             h_for::execute_for,
             h_if::execute_if,
             h_loop::execute_loop,
+            h_match::execute_match,
             h_print::execute_print,
             h_struct::execute_struct,
             h_variables::{execute_update_variable, execute_variables},
@@ -103,11 +104,11 @@ pub fn executor(
             } => {
                 execute_for(var, iterable, body, env, call_stack);
             }
+            Statement::Match { value, arms } => {
+                execute_match(value, arms, env, call_stack);
+            }
             Statement::Struct(struct_decl) => {
                 execute_struct(struct_decl, env, call_stack);
-            }
-            _ => {
-                print!("Error!");
             }
         }
     }
