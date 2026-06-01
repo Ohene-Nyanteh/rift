@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     StackFrame,
@@ -9,9 +9,11 @@ use crate::{
             h_enums::execute_enums,
             h_expressions::execute_expressions,
             h_fn::execute_fn,
+            h_for::execute_for,
             h_if::execute_if,
             h_loop::execute_loop,
             h_print::execute_print,
+            h_struct::execute_struct,
             h_variables::{execute_update_variable, execute_variables},
             h_while::execute_while,
         },
@@ -29,11 +31,11 @@ pub enum Value {
     Str(String),
     Array(Vec<Value>),
     Enum(Vec<Value>), // Str(Variant)
-    Stuct(Vec<(Value, Value)>),
+    Struct(HashMap<String, Value>),
 }
 
 pub fn executor(
-    ast: Vec<Statement>,
+    ast: &Vec<Statement>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) -> Signal {
@@ -41,7 +43,7 @@ pub fn executor(
         match statement {
             Statement::Print(exp) => {
                 let value = execute_expressions(exp, env, call_stack);
-                execute_print(value);
+                execute_print(&value);
             }
             Statement::Let(let_decl) => {
                 execute_variables(let_decl, env, call_stack);
@@ -77,7 +79,7 @@ pub fn executor(
                 execute_fn(fn_decl, env);
             }
             Statement::FnCall(fn_call) => {
-                let signal = execute_fn_call(fn_call.callee, fn_call.args, env, call_stack);
+                let signal = execute_fn_call(&fn_call.callee, &fn_call.args, env, call_stack);
                 if signal != Signal::None {
                     return signal;
                 }
@@ -94,6 +96,16 @@ pub fn executor(
             },
             Statement::Break => return Signal::Break,
             Statement::Continue => return Signal::Continue,
+            Statement::For {
+                var,
+                iterable,
+                body,
+            } => {
+                execute_for(var, iterable, body, env, call_stack);
+            }
+            Statement::Struct(struct_decl) => {
+                execute_struct(struct_decl, env, call_stack);
+            }
             _ => {
                 print!("Error!");
             }

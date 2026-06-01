@@ -58,6 +58,7 @@ pub enum NonAtomic {
     LSquareBraces,
     RSquareBraces,
     Assignment,
+    Dot,
 }
 
 #[derive(Debug, Clone, PartialEq)]

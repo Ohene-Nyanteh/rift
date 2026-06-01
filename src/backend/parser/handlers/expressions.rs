@@ -51,6 +51,10 @@ impl Parser {
                         let enum_exp = self.parse_enum_calls(Identifier(v))?;
                         Box::new(enum_exp)
                     }
+                    Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::Dot) => {
+                        let struct_exp = self.parse_struct_call(Identifier(v))?;
+                        struct_exp
+                    }
                     _ => {
                         // plain variable reference
                         Box::new(Expression::Variable(Identifier(v)))

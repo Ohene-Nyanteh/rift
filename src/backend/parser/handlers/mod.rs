@@ -15,6 +15,7 @@ pub mod h_match;
 pub mod h_print;
 pub mod h_return;
 pub mod h_struct;
+pub mod h_struct_call;
 pub mod h_variables;
 pub mod h_while;
 // pub use h_let::{Parser};

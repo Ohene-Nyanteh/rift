@@ -10,18 +10,18 @@ use crate::{
 };
 
 pub fn execute_loop(
-    variable: Box<Expression>,
-    body: Block,
-    value: Box<Expression>,
+    variable: &Box<Expression>,
+    body: &Block,
+    value: &Box<Expression>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) {
-    let iter_value = match execute_expressions(value, env, call_stack) {
+    let iter_value = match execute_expressions(&value, env, call_stack) {
         Value::Int(v) => v,
         _ => 0,
     };
 
-    let variable_name = match *variable {
+    let variable_name = match variable.as_ref() {
         Expression::Variable(v) => v,
         unexpected => panic!("Expected variable name, got {unexpected:?}"),
     };
@@ -31,7 +31,7 @@ pub fn execute_loop(
 
     loop {
         let loop_env = Environment::new_child(env);
-        let signal = executor(body.statements.clone(), &loop_env, call_stack);
+        let signal = executor(&body.statements.clone(), &loop_env, call_stack);
 
         if signal == Signal::Break {
             break;

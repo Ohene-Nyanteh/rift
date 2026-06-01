@@ -9,32 +9,15 @@ impl Parser {
     // while (condition) { body }
     pub fn parse_while(&mut self) -> Result<Statement, Error> {
         // consume (
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LParen) => {}
-            Some(t) => return Err(Error::InvalidSyntax(format!("Expected ( got {:?}", t.kind))),
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
 
         let condition = self.parse_expressions(0)?;
 
         // consume )
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::RParen) => {}
-            Some(t) => return Err(Error::InvalidSyntax(format!("Expected ) got {:?}", t.kind))),
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::RParen))?;
 
         // consume {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected {{ got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
         let mut body: Vec<Statement> = vec![];
         loop {

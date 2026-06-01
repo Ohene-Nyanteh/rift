@@ -1,16 +1,7 @@
-enum Gender {
-    Male,
-    Female
-};
-
-
-fn test(gender) {
-    if (gender == Gender::Male) {
-        print(Gender::Male);
-    }
-    else {
-        print("Fahhh");
-    }
+struct Person {
+    name: "Ohene",
+    age: 10
 }
 
-test(Gender::Female);
+
+print(Person.name);

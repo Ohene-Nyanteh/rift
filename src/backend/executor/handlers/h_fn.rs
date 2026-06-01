@@ -5,9 +5,9 @@ use crate::backend::{
     nodes::{FunctionDecl, Signal},
 };
 
-pub fn execute_fn(fn_decl: Box<FunctionDecl>, env: &Rc<RefCell<Environment>>) -> Signal {
+pub fn execute_fn(fn_decl: &Box<FunctionDecl>, env: &Rc<RefCell<Environment>>) -> Signal {
     env.borrow_mut()
         .functions
-        .insert(fn_decl.name.clone(), *fn_decl);
+        .insert(fn_decl.name.clone(), *fn_decl.clone());
     Signal::None
 }

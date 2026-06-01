@@ -25,6 +25,10 @@ impl Parser {
             Tokens::NonAtomic(NonAtomic::Assignment) => self.parse_variables(name),
             Tokens::NonAtomic(NonAtomic::LSquareBraces) => self.parse_array_index(name),
             Tokens::NonAtomic(NonAtomic::LParen) => self.parse_function_call(name),
+            Tokens::NonAtomic(NonAtomic::Dot) => {
+                let value = self.parse_struct_call(name)?;
+                Ok(Statement::Expression(value))
+            }
             // Tokens::NonAtomic(NonAtomic::Colon) => self.parse_enum_calls(name),
             unexpected => {
                 return Err(Error::InvalidSyntax(format!(

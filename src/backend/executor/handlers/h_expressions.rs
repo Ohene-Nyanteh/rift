@@ -11,16 +11,16 @@ use crate::{
 };
 
 pub fn execute_expressions(
-    expression: Box<Expression>,
+    expression: &Expression,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) -> Value {
-    match *expression {
+    match expression {
         Expression::Literal(value) => match value {
-            Primary::Int(v) => Value::Int(v),
-            Primary::Float(v) => Value::Float(v),
-            Primary::Bool(v) => Value::Bool(v),
-            Primary::Str(v) => Value::Str(v),
+            Primary::Int(v) => Value::Int(*v),
+            Primary::Float(v) => Value::Float(*v),
+            Primary::Bool(v) => Value::Bool(*v),
+            Primary::Str(v) => Value::Str(v.clone()),
         },
 
         Expression::Unary { op, expr } => {
@@ -144,7 +144,7 @@ pub fn execute_expressions(
         }
 
         Expression::FnCall(fn_call) => {
-            let value = match execute_fn_call(fn_call.callee, fn_call.args, env, call_stack) {
+            let value = match execute_fn_call(&fn_call.callee, &fn_call.args, env, call_stack) {
                 Signal::Return(v) => v,
                 _ => Value::Int(0),
             };
@@ -152,9 +152,6 @@ pub fn execute_expressions(
             value
         }
 
-        // Expression::EnumCall { name, variant } => {
-
-        // },
         Expression::ArrayLiteral(items) => {
             let values = items
                 .into_iter()
@@ -193,7 +190,20 @@ pub fn execute_expressions(
                 panic!("Variant doesnt exist in Enum")
             }
 
-            Value::Str(variant.0)
+            Value::Str(variant.0.clone())
+        }
+
+        Expression::StructCall { target, field } => {
+            let struct_value = env.borrow().get(target).expect("Struct Doesnt Exist");
+            match struct_value {
+                Value::Struct(values) => {
+                    let field_value = values
+                        .get(&field.0.clone())
+                        .expect("Struct field Doesnt exist");
+                    field_value.clone()
+                }
+                unexpected => panic!("Error: Expected a struct, got: {unexpected:?}"),
+            }
         }
     }
 }

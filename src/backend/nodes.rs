@@ -65,7 +65,7 @@ pub struct EnumDecl {
 #[derive(Debug, Clone)]
 pub struct StructDecl {
     pub name: Identifier,
-    pub fields: Vec<Identifier>,
+    pub fields: Vec<(Identifier, Expression)>,
 }
 
 #[derive(Debug, Clone)]
@@ -95,6 +95,10 @@ pub enum Expression {
     ArrayIndex {
         target: Box<Expression>,
         index: Box<Expression>,
+    },
+    StructCall {
+        target: Identifier,
+        field: Identifier,
     },
 }
 

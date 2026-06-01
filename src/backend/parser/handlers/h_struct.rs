@@ -1,12 +1,15 @@
 use crate::backend::{
     errors::Error,
-    nodes::{Identifier, Statement, StructDecl},
+    nodes::{Expression, Identifier, Statement, StructDecl},
     parser::Parser,
-    tokens::{NonAtomic, Token, Tokens},
+    tokens::{
+        NonAtomic, Token,
+        Tokens::{self},
+    },
 };
 
 impl Parser {
-    // struct Point { x, y, z }
+    // struct Point { x: value, y: value, z: value }
     pub fn parse_struct(&mut self) -> Result<Statement, Error> {
         // consume struct name
         let name = match self.next() {
@@ -35,7 +38,7 @@ impl Parser {
         }
 
         // parse fields until }
-        let mut fields: Vec<Identifier> = vec![];
+        let mut fields: Vec<(Identifier, Expression)> = vec![];
         loop {
             match self.peek() {
                 Some(Token {
@@ -53,7 +56,23 @@ impl Parser {
                     // consume field name
                     match self.next() {
                         Some(t) => match t.kind {
-                            Tokens::Variable(name) => fields.push(Identifier(name)),
+                            Tokens::Variable(name) => {
+                                self.expect(Tokens::NonAtomic(NonAtomic::Colon))?;
+
+                                // parse next value: Primary
+                                let value = self.next().ok_or(Error::UnexpectedEOF)?;
+                                match value.kind {
+                                    Tokens::Primary(v) => {
+                                        fields.push((Identifier(name), Expression::Literal(v)))
+                                    }
+                                    error => {
+                                        return Err(Error::InvalidSyntax(format!(
+                                            "Expected field name, got {:?}",
+                                            error
+                                        )))?;
+                                    }
+                                }
+                            }
                             unexpected => {
                                 return Err(Error::InvalidSyntax(format!(
                                     "Expected field name, got {:?}",

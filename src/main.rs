@@ -28,7 +28,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut global_env = Environment::new();
     let mut call_stack: Vec<StackFrame> = vec![];
-    executor(ast, &mut global_env, &mut call_stack);
-
+    executor(&ast, &mut global_env, &mut call_stack);
     Ok(())
 }

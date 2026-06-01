@@ -6,13 +6,13 @@ fn display_value(value: &Value) -> String {
         Value::Int(v) => v.to_string(),
         Value::Float(v) => v.to_string(),
         Value::Str(v) => format!("\"{}\"", v),
-        Value::Stuct(fields) => {
+        Value::Struct(fields) => {
             let v = fields
                 .iter()
-                .map(|(k, v)| display_value(k).to_string() + ":" + &display_value(v))
+                .map(|(k, v)| format!("{}: {}", k, display_value(v)))
                 .collect::<Vec<_>>()
-                .join(",");
-            format!("{}", v)
+                .join(", ");
+            format!("{{ {} }}", v)
         }
         Value::Enum(variants) => {
             let inner = variants
@@ -33,6 +33,6 @@ fn display_value(value: &Value) -> String {
     }
 }
 
-pub fn execute_print(value: Value) {
-    println!("{}", display_value(&value));
+pub fn execute_print(value: &Value) {
+    println!("{}", display_value(value));
 }

@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub fn execute_enums(
-    enum_decl: Box<EnumDecl>,
+    enum_decl: &Box<EnumDecl>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) {
@@ -20,8 +20,9 @@ pub fn execute_enums(
         .iter()
         .map(|v| {
             let exp = Box::new(Expression::Literal(Primary::Str(v.0.clone())));
-            execute_expressions(exp, env, call_stack)
+            execute_expressions(&exp, env, call_stack)
         })
         .collect();
-    env.borrow_mut().define(enum_decl.name, Value::Enum(values));
+    env.borrow_mut()
+        .define(enum_decl.name.clone(), Value::Enum(values));
 }

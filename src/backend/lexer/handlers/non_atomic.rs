@@ -89,6 +89,17 @@ pub fn handle_non_atomic(
                 },
             }
         }
+        '.' => {
+            *index += 1;
+            Token {
+                kind: Tokens::NonAtomic(NonAtomic::Dot),
+                span: Span {
+                    start,
+                    end: *index,
+                    row: *row,
+                },
+            }
+        }
         _ => return None,
     };
 

@@ -10,26 +10,29 @@ use crate::{
 };
 
 pub fn execute_variables(
-    let_decl: Box<LetDecl>,
+    let_decl: &LetDecl,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) {
     let declaration = execute_expressions(
-        let_decl.value.expect("Error getting declaration"),
+        let_decl
+            .value
+            .as_ref()
+            .expect("Error getting variable declaration"),
         env,
         call_stack,
     );
 
-    env.borrow_mut().define(let_decl.name, declaration);
+    env.borrow_mut().define(let_decl.name.clone(), declaration);
 }
 
 pub fn execute_update_variable(
-    var: Identifier,
-    exp: Box<Expression>,
+    var: &Identifier,
+    exp: &Box<Expression>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) {
-    let exp_result = execute_expressions(exp, env, call_stack);
+    let exp_result = execute_expressions(&exp, env, call_stack);
     if !env.borrow_mut().set(&var, exp_result) {
         println!("Error: Variable {} not declared!", var.0);
     }

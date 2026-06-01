@@ -10,8 +10,8 @@ use crate::{
 };
 
 pub fn execute_fn_call(
-    callee: Identifier,
-    args: Vec<Expression>,
+    callee: &Identifier,
+    args: &Vec<Expression>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) -> Signal {
@@ -35,7 +35,7 @@ pub fn execute_fn_call(
     // map the values of the args with the args name and store it in the new Environment
     for (index, expression) in args.iter().enumerate() {
         // parse the expression and get the value
-        let value = execute_expressions(Box::new(expression.clone()), env, call_stack);
+        let value = execute_expressions(expression, env, call_stack);
         let key = match function.args.get(index) {
             Some(v) => v,
             None => panic!(
@@ -49,7 +49,7 @@ pub fn execute_fn_call(
     }
 
     // now execute the body
-    let signal = executor(function.body.statements, &fn_env, call_stack);
+    let signal = executor(&function.body.statements, &fn_env, call_stack);
 
     // remove the function from the stack
     call_stack.pop(); // clean up
