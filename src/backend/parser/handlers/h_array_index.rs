@@ -1,8 +1,5 @@
 use crate::backend::{
-    errors::Error,
-    nodes::{Expression, Identifier, Statement},
-    parser::Parser,
-    tokens::{NonAtomic, Tokens},
+    error_parser::Error, nodes::{Expression, Identifier, Statement}, parser::Parser, tokens::{NonAtomic, Primary, Tokens}
 };
 
 impl Parser {
@@ -10,7 +7,7 @@ impl Parser {
         // Skip the [
         self.next();
 
-        let value = self.parse_expressions(0)?;
+        let value = self.parse_expressions(0, Tokens::Primary(Primary::Str("Int value".to_string())))?;
 
         // expect ]
         self.expect(Tokens::NonAtomic(NonAtomic::RSquareBraces))?;

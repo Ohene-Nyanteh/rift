@@ -44,6 +44,7 @@ pub enum Keywords {
     Struct,
     Return,
     Print,
+    In
 }
 
 #[derive(Debug, Clone, PartialEq)]

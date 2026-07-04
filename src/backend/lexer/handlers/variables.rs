@@ -53,6 +53,7 @@ fn to_keyword_or_variable(value: String) -> Tokens {
         "match" => Tokens::Keyword(Keywords::Match),
         "print" => Tokens::Keyword(Keywords::Print),
         "loop" => Tokens::Keyword(Keywords::Loop),
+        "in" => Tokens::Keyword(Keywords::In),
         "from" => Tokens::Keyword(Keywords::From),
 
         // bool data type

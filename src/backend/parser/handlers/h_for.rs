@@ -1,7 +1,7 @@
-use crate::backend::errors::Error;
+use crate::backend::error_parser::Error;
 use crate::backend::nodes::{Block, Identifier, Statement};
-use crate::backend::parser::Parser;
-use crate::backend::tokens::{NonAtomic, Token, Tokens};
+use crate::backend::parser::{Parser, col_for};
+use crate::backend::tokens::{Keywords, NonAtomic, Primary, Token, Tokens};
 
 impl Parser {
     // for (item in iterable) { body }
@@ -9,7 +9,14 @@ impl Parser {
         // consume (
         match self.next() {
             Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LParen) => {}
-            Some(t) => return Err(Error::InvalidSyntax(format!("Expected ( got {:?}", t.kind))),
+            Some(t) => return  Err(Error::UnexpectedToken {
+                expected: Tokens::NonAtomic(NonAtomic::LParen),
+                error_line: self.line_text(t.span.row),
+                col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                found: t.kind,
+                at: t.span
+            }),
             None => return Err(Error::UnexpectedEOF),
         }
 
@@ -18,50 +25,31 @@ impl Parser {
             Some(t) => match t.kind {
                 Tokens::Variable(name) => Identifier(name),
                 unexpected => {
-                    return Err(Error::InvalidSyntax(format!(
-                        "Expected variable name in for loop, got {:?}",
-                        unexpected
-                    )));
+                    return  Err(Error::UnexpectedToken{
+                        expected: Tokens::Primary(Primary::Str("variable name in for-loop".to_string())),
+                        error_line: self.line_text(t.span.row),
+                        col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                        col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                        found: unexpected,
+                        at: t.span
+                    });
                 }
             },
             None => return Err(Error::UnexpectedEOF),
         };
 
         // consume `in`
-        match self.next() {
-            Some(t) => match &t.kind {
-                Tokens::Variable(s) if s == "in" => {}
-                unexpected => {
-                    return Err(Error::InvalidSyntax(format!(
-                        "Expected 'in' in for loop, got {:?}",
-                        unexpected
-                    )));
-                }
-            },
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::Keyword(Keywords::In))?;
 
         // parse iterable expression
-        let iterable = self.parse_expressions(0)?;
+        let expected = Tokens::Primary(Primary::Str("Expression".to_string()));
+        let iterable = self.parse_expressions(0, expected)?;
 
         // consume )
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::RParen) => {}
-            Some(t) => return Err(Error::InvalidSyntax(format!("Expected ) got {:?}", t.kind))),
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::RParen))?;
 
         // consume {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected {{ got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
         // parse body until }
         let mut body: Vec<Statement> = vec![];

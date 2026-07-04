@@ -1,7 +1,7 @@
-use crate::backend::errors::Error;
+use crate::backend::error_parser::Error;
 use crate::backend::nodes::{Block, FunctionDecl, Identifier, Statement};
-use crate::backend::parser::Parser;
-use crate::backend::tokens::{NonAtomic, Token, Tokens};
+use crate::backend::parser::{Parser, col_for};
+use crate::backend::tokens::{NonAtomic, Primary, Token, Tokens};
 
 impl Parser {
     pub fn parse_functions(&mut self) -> Result<Statement, Error> {
@@ -15,10 +15,14 @@ impl Parser {
         let fn_name = match &fn_name_token.kind {
             Tokens::Variable(val) => Identifier(val.to_string()),
             unexpected => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected a fn name, got {:?}",
-                    unexpected
-                )));
+                return Err(Error::UnexpectedToken{
+                    expected: Tokens::Primary(Primary::Str("fn name".to_string())),
+                    error_line: self.line_text(fn_name_token.span.row),
+                    col_start: col_for(fn_name_token.span.start, fn_name_token.span.row, &self.line_starts),
+                    col_end: col_for(fn_name_token.span.end, fn_name_token.span.row, &self.line_starts),
+                    found: unexpected.clone(),
+                    at: fn_name_token.span
+                });
             }
         };
 
@@ -35,10 +39,14 @@ impl Parser {
                 Tokens::Variable(val) => args.push(Identifier(val.to_string())),
                 Tokens::NonAtomic(NonAtomic::Comma) => continue,
                 unexpected => {
-                    return Err(Error::InvalidSyntax(format!(
-                        "Expected a ) , or args, got {:?}",
-                        unexpected
-                    )));
+                    return Err(Error::UnexpectedToken{
+                        expected: Tokens::Primary(Primary::Str(") or args,".to_string())),
+                        error_line: self.line_text(next_token.span.row),
+                        col_start: col_for(next_token.span.start, next_token.span.row, &self.line_starts),
+                        col_end: col_for(next_token.span.end, next_token.span.row, &self.line_starts),
+                        found: unexpected.clone(),
+                        at: next_token.span
+                    });
                 }
             }
         }

@@ -25,7 +25,7 @@ pub fn execute_match(
             }
             _ => {
                 arm_value = Some(execute_expressions(&arm.0, env, call_stack));
-                let arm_v = arm_value.expect("Error: Couldnt parse ");
+                let arm_v = arm_value.expect("Error: Couldnt parse match arm value");
                 if value == arm_v {
                     executor(&arm.1.statements, env, call_stack);
                     break;

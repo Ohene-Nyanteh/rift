@@ -121,8 +121,8 @@ let e = 10 % 3;   # 1
 **Logical:**
 
 ```
-true && false   # false
-true || false   # true
+true & false   # false
+true | false   # true
 !true           # false
 ```
 

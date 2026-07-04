@@ -1,8 +1,8 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Call, Expression, Identifier, Statement},
     parser::Parser,
-    tokens::{NonAtomic, Tokens},
+    tokens::{NonAtomic, Primary, Tokens},
 };
 
 // fn_call.rs
@@ -25,7 +25,8 @@ impl Parser {
                 }
                 _ => {
                     // parse a full expression as the argument (handles n-1, n+2, etc.)
-                    let arg = self.parse_expressions(0)?;
+                    let expected = Tokens::Primary(Primary::Str("args".to_string()));
+                    let arg = self.parse_expressions(0, expected)?;
                     args.push(*arg);
                 }
             }

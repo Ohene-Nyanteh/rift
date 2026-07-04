@@ -1,7 +1,7 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Expression, Identifier},
-    parser::Parser,
+    parser::{Parser, col_for},
     tokens::Tokens,
 };
 
@@ -20,6 +20,10 @@ impl Parser {
                 return Err(Error::UnexpectedToken {
                     expected: Tokens::Variable("Variant Name".to_string()),
                     found: unexpected,
+                    error_line: self.line_text(variant_token.span.row),
+                    col_start: col_for(variant_token.span.start, variant_token.span.row, &self.line_starts),
+                    col_end: col_for(variant_token.span.end, variant_token.span.row, &self.line_starts),
+                    at: variant_token.span
                 });
             }
         };

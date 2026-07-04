@@ -1,7 +1,7 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Block, Expression, Identifier, Statement},
-    parser::Parser,
+    parser::{Parser, col_for},
     tokens::{Keywords, NonAtomic, Primary, Token, Tokens},
 };
 
@@ -14,7 +14,11 @@ impl Parser {
             unexpected => {
                 return Err(Error::UnexpectedToken {
                     expected: Tokens::Variable(String::from("Variable Name")),
+                    error_line: self.line_text(variable_name_token.span.row),
+                    col_start: col_for(variable_name_token.span.start, variable_name_token.span.row, &self.line_starts),
+                    col_end: col_for(variable_name_token.span.end, variable_name_token.span.row, &self.line_starts),
                     found: unexpected.clone(),
+                    at: variable_name_token.span
                 });
             }
         };
@@ -29,7 +33,11 @@ impl Parser {
             unexpected => {
                 return Err(Error::UnexpectedToken {
                     expected: Tokens::Keyword(Keywords::From),
+                    error_line: self.line_text(value_token.span.row),
+                    col_start: col_for(value_token.span.start, value_token.span.row, &self.line_starts),
+                    col_end: col_for(value_token.span.end, value_token.span.row, &self.line_starts),
                     found: unexpected.clone(),
+                    at: value_token.span
                 });
             }
         };

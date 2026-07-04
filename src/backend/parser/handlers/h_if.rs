@@ -1,7 +1,7 @@
-use crate::backend::errors::Error;
+use crate::backend::error_parser::Error;
 use crate::backend::nodes::{Block, Statement};
 use crate::backend::parser::Parser;
-use crate::backend::tokens::{Keywords, NonAtomic, Token, Tokens};
+use crate::backend::tokens::{Keywords, NonAtomic, Primary, Token, Tokens};
 
 impl Parser {
     // if (condition) { body } elif (condition) { body } else { body }
@@ -49,7 +49,8 @@ impl Parser {
     // parses (expression) — used by if/while
     fn parse_condition(&mut self) -> Result<Box<crate::backend::nodes::Expression>, Error> {
         self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
-        let condition = self.parse_expressions(0)?;
+          let expected = Tokens::Primary(Primary::Str("Condition".to_string()));
+        let condition = self.parse_expressions(0, expected)?;
         self.expect(Tokens::NonAtomic(NonAtomic::RParen))?;
         Ok(condition)
     }

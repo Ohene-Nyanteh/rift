@@ -1,0 +1,349 @@
+# ============================================================
+# Rift Syntax Error Test Suite — ACTIVE VERSION
+# Run this file. It will panic on the FIRST line below.
+# Comment out (or delete) that line once you've seen/fixed
+# the error, then rerun to hit the next one. Repeat down
+# the file.
+#
+# Lines marked [SEMANTIC?] might not panic at parse time at
+# all — worth noting which ones sail through.
+# ============================================================
+
+# ---------- LET DECLARATIONS ----------
+
+# 1. Invalid assignment target (string literal instead of identifier)
+let a = "b";
+
+# 2. Invalid assignment target (number literal instead of identifier)
+let c = 10;
+
+# 3. Missing value after =
+let x = 5;
+
+# 4. Missing = entirely
+let x = 10;
+
+# 5. Missing semicolon
+let x = 10;
+let y = 20;
+
+# 6. Keyword used as identifier
+let e = 5;
+
+# 7. Reassigning without let, malformed target
+e = 10;
+
+# ---------- STRINGS ----------
+
+# 8. Unclosed string literal
+let s = "hello world";
+
+# 9. Unclosed string at EOF
+let s = "never closed";
+
+# ---------- ARRAYS ----------
+
+# 10. Unclosed array (missing ])
+let arr = [1, 2, 3];
+
+# 11. Missing comma between elements
+let arr = [1, 2, 3];
+
+# 12. Empty index access
+let arr = [1, 2, 3];
+let x = arr[2];
+
+# 13. Unclosed index bracket
+let arr = [1, 2, 3];
+let x = arr[0];
+
+# 14. [SEMANTIC?] Trailing comma
+let arr = [1, 2, 3,];
+
+# ---------- EXPRESSIONS / OPERATORS ----------
+
+# 15. Trailing operator, missing right operand
+let z = 10 + 20;
+
+# 16. Doubled binary operator
+let z = 10 + + 5;
+
+# 17. Unbalanced parens (missing close)
+let z = (10 + 5;
+
+# 18. Unbalanced parens (extra close)
+let z = 10 + 5);
+
+# 19. Empty parens as an expression
+let z = ();
+
+# 20. Two literals, no operator between them
+let z = 10 5;
+
+# ---------- PRINT ----------
+
+# 21. Missing closing paren
+print("hello";
+
+# 22. Missing opening paren
+print "hello");
+
+# 23. Empty print with dangling comma
+print(,);
+
+# ---------- CONDITIONALS ----------
+
+# 24. Missing parens around condition
+if x > 5 {
+    print("big");
+}
+
+# 25. Missing condition entirely
+if () {
+    print("nothing");
+}
+
+# 26. Missing opening brace
+if (score >= 90)
+    print("A");
+
+# 27. Missing closing brace
+if (score >= 90) {
+    print("A");
+
+print("after");
+
+# 28. elif with no condition
+if (x > 5) {
+    print("a");
+} elif {
+    print("b");
+}
+
+# 29. else with a condition
+if (x > 5) {
+    print("a");
+} else (x < 5) {
+    print("b");
+}
+
+# ---------- FUNCTIONS ----------
+
+# 30. Missing function name
+fn (a, b) {
+    return a + b;
+}
+
+# 31. Missing parens around params
+fn greet name {
+    print("Hello, " + name);
+}
+
+# 32. Missing comma between params
+fn add(a b) {
+    return a + b;
+}
+
+# 33. Missing closing paren on params
+fn add(a, b {
+    return a + b;
+}
+
+# 34. Missing body braces
+fn add(a, b)
+    return a + b;
+
+# 35. [SEMANTIC?] Trailing comma in params
+fn add(a, b,) {
+    return a + b;
+}
+
+# 36. Call with missing closing paren
+fn add(a, b) { return a + b; }
+let result = add(3, 7;
+
+# ---------- WHILE LOOP ----------
+
+# 37. Missing parens around condition
+let i = 0;
+while i < 5 {
+    print(i);
+    i = i + 1;
+}
+
+# 38. Missing body braces
+let i = 0;
+while (i < 5)
+    print(i);
+
+# 39. Empty condition
+while () {
+    print("x");
+}
+
+# ---------- LOOP FROM ----------
+
+# 40. Missing "from" keyword
+loop count 0 {
+    print(count);
+}
+
+# 41. Missing starting number
+loop count from {
+    print(count);
+}
+
+# 42. Missing body braces
+loop count from 0
+    print(count);
+
+# ---------- FLOW CONTROL ----------
+
+# 43. [SEMANTIC?] break outside any loop
+break;
+
+# 44. [SEMANTIC?] continue outside any loop
+continue;
+
+# 45. [SEMANTIC?] return outside any function
+return 5;
+
+# 46. return with dangling operator
+fn f() {
+    return 5 +;
+}
+
+# ---------- ENUMS ----------
+
+# 47. Missing enum name
+enum {
+    North,
+    South
+}
+
+# 48. Missing braces
+enum Direction
+    North,
+    South;
+
+# 49. Variant with a value
+enum Direction {
+    North = 1,
+    South
+}
+
+# 50. Missing comma between variants
+enum Direction {
+    North
+    South
+}
+
+# 51. [SEMANTIC?] Trailing comma
+enum Direction {
+    North,
+    South,
+}
+
+# 52. Accessing variant with . instead of ::
+enum Direction {
+    North,
+    South
+}
+let heading = Direction.North;
+
+# 53. Malformed variant access, missing variant name
+enum Direction {
+    North,
+    South
+}
+let heading = Direction::;
+
+# ---------- STRUCTS ----------
+
+# 54. Missing struct name
+struct {
+    x: 0,
+    y: 0
+}
+
+# 55. Field missing colon
+struct Point {
+    x 0,
+    y: 0
+}
+
+# 56. Field missing default value
+struct Point {
+    x: ,
+    y: 0
+}
+
+# 57. Missing comma between fields
+struct Point {
+    x: 0
+    y: 0
+}
+
+# 58. Missing closing brace
+struct Point {
+    x: 0,
+    y: 0
+
+let p = Point;
+
+# 59. Dot access with no field name
+struct Point { x: 0, y: 0 }
+let p = Point;
+let v = p.;
+
+# 60. [SEMANTIC?] Assigning to undeclared field
+struct Point { x: 0, y: 0 }
+let p = Point;
+p.z = 5;
+
+# ---------- MATCH ----------
+
+# 61. Missing => between case and block
+let status = 2;
+match status {
+    1 { print("one"); }
+    default => { print("other"); }
+}
+
+# 62. Case block missing braces
+let status = 2;
+match status {
+    1 => print("one");
+    default => { print("other"); }
+}
+
+# 63. Missing match subject
+match {
+    1 => { print("one"); }
+}
+
+# 64. Missing closing brace on match
+let status = 2;
+match status {
+    1 => { print("one"); }
+    default => { print("other"); }
+
+# 65. [SEMANTIC?] Missing default arm
+let status = 5;
+match status {
+    1 => { print("one"); }
+    2 => { print("two"); }
+}
+
+# 66. Case with no arrow AND no block
+let status = 2;
+match status {
+    1
+    default => { print("other"); }
+}
+
+# ---------- COMMENTS ----------
+
+# 67. [SEMANTIC?] Comment mid-expression
+let x = 10 # this breaks the statement
++ 5;

@@ -1,8 +1,8 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::Statement,
     parser::Parser,
-    tokens::{NonAtomic, Token, Tokens},
+    tokens::{NonAtomic, Primary, Token, Tokens},
 };
 
 impl Parser {
@@ -22,19 +22,11 @@ impl Parser {
             _ => {}
         }
 
-        let value = self.parse_expressions(0)?;
+        let expected = Tokens::Primary(Primary::Str(vec!["value", "variable", "enum variant"].join(" or ").to_string()));
+        let value = self.parse_expressions(0, expected)?;
 
         // only consume semicolon; the expression already consumed everything else
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::SemiColon) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected ; after return, got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
 
         Ok(Statement::Return(Some(value)))
     }

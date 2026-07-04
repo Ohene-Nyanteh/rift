@@ -1,10 +1,9 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Expression, Identifier, Statement, StructDecl},
-    parser::Parser,
+    parser::{Parser, col_for},
     tokens::{
-        NonAtomic, Token,
-        Tokens::{self},
+        NonAtomic, Primary, Token, Tokens::{self}
     },
 };
 
@@ -16,26 +15,21 @@ impl Parser {
             Some(t) => match t.kind {
                 Tokens::Variable(name) => Identifier(name),
                 unexpected => {
-                    return Err(Error::InvalidSyntax(format!(
-                        "Expected struct name, got {:?}",
-                        unexpected
-                    )));
+                    return  Err(Error::UnexpectedToken{
+                        expected: Tokens::Primary(Primary::Str("struct name".to_string())),
+                        error_line: self.line_text(t.span.row),
+                        col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                        col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                        found: unexpected,
+                        at: t.span
+                    });
                 }
             },
             None => return Err(Error::UnexpectedEOF),
         };
 
         // consume {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LCurlyBraces) => {}
-            Some(t) => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected {{ got {:?}",
-                    t.kind
-                )));
-            }
-            None => return Err(Error::UnexpectedEOF),
-        }
+        self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
 
         // parse fields until }
         let mut fields: Vec<(Identifier, Expression)> = vec![];
@@ -65,10 +59,14 @@ impl Parser {
                                 fields.push(v);
                             }
                             unexpected => {
-                                return Err(Error::InvalidSyntax(format!(
-                                    "Expected field name, got {:?}",
-                                    unexpected
-                                )));
+                                return Err(Error::UnexpectedToken{
+                                    expected: Tokens::Primary(Primary::Str("Struct field key".to_string())),
+                                    error_line: self.line_text(t.span.row),
+                                    col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                                    col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                                    found: unexpected,
+                                    at: t.span
+                                });
                             }
                         },
                         None => return Err(Error::UnexpectedEOF),
@@ -111,9 +109,14 @@ impl Parser {
                 }
             }
             unexpected => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected a variable, value or a enum variant got {unexpected:?}"
-                )));
+                return  Err(Error::UnexpectedToken{
+                    expected: Tokens::Primary(Primary::Str("Variable, value or an enum".to_string())),
+                    error_line: self.line_text(token.span.row),
+                    col_start: col_for(token.span.start, token.span.row, &self.line_starts),
+                    col_end: col_for(token.span.end, token.span.row, &self.line_starts),
+                    found: unexpected,
+                    at: token.span.clone()
+                });
             }
         }
     }

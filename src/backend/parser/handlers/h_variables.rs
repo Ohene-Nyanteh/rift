@@ -1,20 +1,25 @@
 use std::panic;
 
-use crate::backend::errors::Error;
+use crate::backend::error_parser::Error;
 use crate::backend::nodes::{Identifier, Statement};
-use crate::backend::parser::Parser;
-use crate::backend::tokens::{NonAtomic, Tokens};
+use crate::backend::parser::{Parser, col_for};
+use crate::backend::tokens::{NonAtomic, Primary, Tokens};
 
 impl Parser {
     pub fn parse_variables_or_function_calls(&mut self) -> Result<Statement, Error> {
         //consume the `name`
         let name_token = self.next().ok_or(Error::UnexpectedEOF)?;
-        let name = match &name_token.kind {
+        let name = match name_token.kind {
             Tokens::Variable(val) => Identifier(val.to_string()),
-            _ => {
-                return Err(Error::InvalidSyntax(
-                    "Expected a variable name ".to_string(),
-                ));
+            unexpected => {
+                return Err(Error::UnexpectedToken{
+                    expected: Tokens::Primary(Primary::Str("A variable name".to_string())),
+                    error_line: self.line_text(name_token.span.row),
+                    col_start: col_for(name_token.span.start, name_token.span.row, &self.line_starts),
+                    col_end: col_for(name_token.span.end, name_token.span.row, &self.line_starts),
+                    found: unexpected,
+                    at: name_token.span
+                });
             }
         };
 
@@ -32,10 +37,14 @@ impl Parser {
             }
             // Tokens::NonAtomic(NonAtomic::Colon) => self.parse_enum_calls(name),
             unexpected => {
-                return Err(Error::InvalidSyntax(format!(
-                    "Expected = or ( got, {:?}",
-                    unexpected
-                )));
+                return  Err(Error::UnexpectedToken {
+                    expected: Tokens::Primary(Primary::Str(vec!["'('", "'='"].join(", ").to_string())),
+                    error_line: self.line_text(next_token.span.row),
+                    col_start: col_for(next_token.span.start, next_token.span.row, &self.line_starts),
+                    col_end: col_for(next_token.span.end, next_token.span.row, &self.line_starts),
+                    found: unexpected,
+                    at: next_token.span.clone()
+                });
             }
         }
     }
@@ -44,7 +53,8 @@ impl Parser {
         // expect `=`
         self.expect(Tokens::NonAtomic(NonAtomic::Assignment))?;
 
-        let exp = self.parse_expressions(0);
+        let expected = Tokens::Primary(Primary::Str(vec!["expression", "value", "enum|struct variant"].join(" or ").to_string()));
+        let exp = self.parse_expressions(0, expected);
         let value = match exp {
             Ok(value) => *value,
             Err(_) => panic!("Error: Couldnt Parse "),

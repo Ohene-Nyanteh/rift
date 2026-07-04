@@ -1,8 +1,8 @@
 use crate::backend::{
-    errors::Error::{self},
+    error_parser::Error,
     nodes::{Expression, Identifier},
-    parser::Parser,
-    tokens::{NonAtomic, Tokens},
+    parser::{Parser, col_for},
+    tokens::{NonAtomic, Primary, Tokens},
 };
 
 impl Parser {
@@ -16,9 +16,14 @@ impl Parser {
         let field_token = self.next().ok_or(Error::UnexpectedEOF)?;
         let field = match field_token.kind {
             Tokens::Variable(v) => Identifier(v),
-            unexpected => Err(Error::InvalidSyntax(String::from(format!(
-                "Invalid Syntax: Expected a Variant, got {unexpected:?}"
-            ))))?,
+            unexpected =>  Err(Error::UnexpectedToken{
+                expected: Tokens::Primary(Primary::Str("struct variant name".to_string())),
+                error_line: self.line_text(field_token.span.row),
+                col_start: col_for(field_token.span.start, field_token.span.row, &self.line_starts),
+                col_end: col_for(field_token.span.end, field_token.span.row, &self.line_starts),
+                found: unexpected,
+                at: field_token.span
+            })?
         };
 
         // check the next token to parse it as assignment or just access
@@ -26,8 +31,8 @@ impl Parser {
         if next_token.kind == Tokens::NonAtomic(NonAtomic::Assignment) {
             // skip the =
             self.next().ok_or(Error::UnexpectedEOF)?;
-
-            let expression = self.parse_expressions(0)?;
+            let expected = Tokens::Primary(Primary::Str(vec!["value", "enum variant", "struct variant"].join(" or ").to_string()));
+            let expression = self.parse_expressions(0, expected)?;
 
             statement_exp = Box::new(Expression::StructAssignment {
                 target: name.clone(),

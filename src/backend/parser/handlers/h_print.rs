@@ -1,7 +1,7 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::Statement,
-    parser::Parser,
+    parser::{Parser, col_for},
     tokens::{NonAtomic, Primary, Tokens},
 };
 
@@ -15,15 +15,18 @@ impl Parser {
             None => return Err(Error::UnexpectedEOF)?,
             Some(v) => match v.clone().kind {
                 Tokens::Atomic(_) | Tokens::Variable(_) | Tokens::Primary(_) => {
-                    match self.parse_expressions(0) {
-                        Ok(exp) => exp,
-                        Err(_) => panic!("Error parsing expression"),
-                    }
+                    let expected = Tokens::Primary(Primary::Str(vec!["Expression(+, -, /, %,) etc..", "variable", "value"].join(" or ").to_string()));
+                    let exp = self.parse_expressions(0, expected)?;
+                    exp
                 }
                 unexpected => {
                     return Err(Error::UnexpectedToken {
-                        expected: Tokens::Primary(Primary::Str("".to_string())),
+                        expected: Tokens::Primary(Primary::Str("'value'".to_string())),
+                        error_line: self.line_text(v.span.row),
+                        col_start: col_for(v.span.start, v.span.row, &self.line_starts),
+                        col_end: col_for(v.span.end, v.span.row, &self.line_starts),
                         found: unexpected,
+                        at: v.span.clone()
                     })?;
                 }
             },

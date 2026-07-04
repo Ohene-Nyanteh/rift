@@ -1,8 +1,8 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{EnumDecl, Identifier, Statement},
-    parser::Parser,
-    tokens::{NonAtomic, Token, Tokens},
+    parser::{Parser, col_for},
+    tokens::{NonAtomic, Primary, Token, Tokens},
 };
 
 impl Parser {
@@ -13,10 +13,14 @@ impl Parser {
             Some(t) => match t.kind {
                 Tokens::Variable(name) => Identifier(name),
                 unexpected => {
-                    return Err(Error::InvalidSyntax(format!(
-                        "Expected enum name, got {:?}",
-                        unexpected
-                    )));
+                    return Err(Error::UnexpectedToken{
+                        expected: Tokens::Primary(Primary::Str("enum name".to_string())),
+                        error_line: self.line_text(t.span.row),
+                        col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                        col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                        found: unexpected,
+                        at: t.span
+                    });
                 }
             },
             None => return Err(Error::UnexpectedEOF),
@@ -46,10 +50,14 @@ impl Parser {
                         Some(t) => match t.kind {
                             Tokens::Variable(name) => variants.push(Identifier(name)),
                             unexpected => {
-                                return Err(Error::InvalidSyntax(format!(
-                                    "Expected variant name, got {:?}",
-                                    unexpected
-                                )));
+                                return Err(Error::UnexpectedToken{
+                                    expected: Tokens::Primary(Primary::Str("enum variant name".to_string())),
+                                    found: unexpected,
+                                    error_line: self.line_text(t.span.row),
+                                    col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                                    col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                                    at: t.span
+                                });
                             }
                         },
                         None => return Err(Error::UnexpectedEOF),

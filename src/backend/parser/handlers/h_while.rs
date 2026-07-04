@@ -1,8 +1,8 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Block, Statement},
     parser::Parser,
-    tokens::{NonAtomic, Token, Tokens},
+    tokens::{NonAtomic, Primary, Token, Tokens},
 };
 
 impl Parser {
@@ -11,7 +11,8 @@ impl Parser {
         // consume (
         self.expect(Tokens::NonAtomic(NonAtomic::LParen))?;
 
-        let condition = self.parse_expressions(0)?;
+        let expected = Tokens::Primary(Primary::Str("condition".to_string()));
+        let condition = self.parse_expressions(0, expected)?;
 
         // consume )
         self.expect(Tokens::NonAtomic(NonAtomic::RParen))?;

@@ -1,21 +1,32 @@
-use super::errors::Error;
 use super::nodes::Statement;
-use crate::backend::tokens::{Keywords, NonAtomic, Token, Tokens};
+use crate::{LexerOutput, backend::{error_parser::Error, tokens::{Keywords, NonAtomic, Primary, Token, Tokens}}};
 pub mod handlers;
 
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
+    source_map: Vec<String>, // source map for errors
+    line_starts: Vec<usize>,
     pos: usize,
 }
 
+
+pub fn col_for(offset: usize, row: usize, line_starts: &[usize]) -> usize {
+    offset - line_starts[row]
+}
+
+
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+    pub fn new(lexer_output: LexerOutput) -> Self {
+        Self { tokens: lexer_output.tokens, source_map: lexer_output.source_map,line_starts: lexer_output.line_starts, pos: 0 }
     }
 
     pub fn peek(&self) -> Option<&Token> {
         self.tokens.get(self.pos).clone()
+    }
+
+    fn line_text(&self, row: usize) -> String {
+        self.source_map.get(row).cloned().unwrap_or_default()
     }
 
     pub fn expect(&mut self, expected_token: Tokens) -> Result<(), Error> {
@@ -25,11 +36,17 @@ impl Parser {
             return Err(Error::UnexpectedToken {
                 expected: expected_token,
                 found: token.kind,
+                at: token.span.clone(),
+                error_line: self.line_text(token.span.row),
+                col_start: col_for(token.span.start, token.span.row, &self.line_starts),
+                col_end: col_for(token.span.end, token.span.row, &self.line_starts),
             });
         }
 
         Ok(())
     }
+
+
 
     pub fn next(&mut self) -> Option<Token> {
         let tok = self.tokens.get(self.pos).cloned();
@@ -109,15 +126,20 @@ impl Parser {
             Tokens::Variable(_) => self.parse_variables_or_function_calls(),
             Tokens::EOF => Err(Error::UnexpectedEOF),
             _ => {
-                let expr = self.parse_expressions(0)?;
+                let expected = Tokens::Primary(Primary::Str("Expression".to_string()));
+                let expr = self.parse_expressions(0, expected)?;
                 match self.next() {
                     Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::SemiColon) => {
                         Ok(Statement::Expression(expr))
                     }
-                    Some(t) => Err(Error::InvalidSyntax(format!(
-                        "Expected ; after expression, got {:?}",
-                        t.kind
-                    ))),
+                    Some(t) => Err(Error::UnexpectedToken {
+                        expected: Tokens::NonAtomic(NonAtomic::SemiColon),
+                        found: t.kind,
+                        error_line: self.line_text(t.span.row),
+                        col_start: col_for(t.span.start, t.span.row, &self.line_starts),
+                        col_end: col_for(t.span.end, t.span.row, &self.line_starts),
+                        at: t.span
+                    }),
                     None => Err(Error::UnexpectedEOF),
                 }
             }

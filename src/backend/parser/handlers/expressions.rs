@@ -1,12 +1,9 @@
 use crate::backend::{
-    errors::Error,
-    nodes::{Expression, Identifier},
-    parser::Parser,
-    tokens::{NonAtomic, Operations, Primary, Tokens},
+    error_parser::Error, nodes::{Expression, Identifier}, parser::{Parser, col_for}, tokens::{NonAtomic, Operations, Primary, Tokens}
 };
 
 impl Parser {
-    pub fn parse_expressions(&mut self, min_bp: u8) -> Result<Box<Expression>, Error> {
+    pub fn parse_expressions(&mut self, min_bp: u8, expected: Tokens) -> Result<Box<Expression>, Error> {
         let next_token = self.peek().ok_or(Error::UnexpectedEOF)?;
 
         let mut lhs: Box<Expression> = match next_token.kind.clone() {
@@ -64,7 +61,7 @@ impl Parser {
             // unary: -x or !x
             Tokens::Atomic(Operations::Sub) => {
                 self.next();
-                let expr = self.parse_expressions(7)?; // higher than everything else
+                let expr = self.parse_expressions(7, expected.clone())?; // higher than everything else
                 Box::new(Expression::Unary {
                     op: Operations::Sub,
                     expr,
@@ -72,7 +69,7 @@ impl Parser {
             }
             Tokens::Atomic(Operations::Not) => {
                 self.next();
-                let expr = self.parse_expressions(7)?;
+                let expr = self.parse_expressions(7, expected.clone())?;
                 Box::new(Expression::Unary {
                     op: Operations::Not,
                     expr,
@@ -82,15 +79,19 @@ impl Parser {
             // grouped expression: (2 + 3)
             Tokens::NonAtomic(NonAtomic::LParen) => {
                 self.next();
-                let inner = self.parse_expressions(0)?;
-                self.expect_rparen()?; // consume the closing )
+                let inner = self.parse_expressions(0, expected.clone())?;
+                self.expect(Tokens::NonAtomic(NonAtomic::RParen))?; // consume the closing )
                 inner
             }
 
             t => {
                 return Err(Error::UnexpectedToken {
-                    expected: Tokens::NonAtomic(NonAtomic::RParen),
+                    expected: expected,
+                    error_line: self.line_text(next_token.span.row),
+                    col_start: col_for(next_token.span.start, next_token.span.row, &self.line_starts),
+                    col_end: col_for(next_token.span.end, next_token.span.row, &self.line_starts),
                     found: t,
+                    at: next_token.span.clone()
                 });
             }
         };
@@ -117,22 +118,11 @@ impl Parser {
             }
 
             self.next(); // consume operator
-            let rhs = self.parse_expressions(rbp)?;
+            let rhs = self.parse_expressions(rbp, expected.clone())?;
             lhs = Box::new(Expression::Binary { op, lhs, rhs });
         }
 
         Ok(lhs)
-    }
-
-    fn expect_rparen(&mut self) -> Result<(), Error> {
-        match self.next() {
-            Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::RParen) => Ok(()),
-            Some(t) => Err(Error::UnexpectedToken {
-                expected: Tokens::NonAtomic(NonAtomic::RParen),
-                found: t.kind,
-            }),
-            None => Err(Error::UnexpectedEOF),
-        }
     }
 }
 

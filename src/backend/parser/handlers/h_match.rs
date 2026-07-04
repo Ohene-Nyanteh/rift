@@ -1,14 +1,15 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::{Block, Statement},
     parser::Parser,
-    tokens::{NonAtomic, Token, Tokens},
+    tokens::{NonAtomic, Primary, Token, Tokens},
 };
 
 impl Parser {
     // match value {}
     pub fn parse_match(&mut self) -> Result<Statement, Error> {
-        let value = self.parse_expressions(0)?;
+          let expected = Tokens::Primary(Primary::Str(vec!["value", "variable", "expression", "enum variant", "struct"].join(" or ").to_string()));
+        let value = self.parse_expressions(0, expected)?;
 
         // consume {
         self.expect(Tokens::NonAtomic(NonAtomic::LCurlyBraces))?;
@@ -29,7 +30,8 @@ impl Parser {
                 })
                 | None => return Err(Error::UnexpectedEOF),
                 _ => {
-                    let pattern = self.parse_expressions(0)?;
+                    let expected = Tokens::Primary(Primary::Str("Expression".to_string()));
+                    let pattern = self.parse_expressions(0, expected)?;
 
                     // expect =>
                     self.expect(Tokens::NonAtomic(NonAtomic::FatArrow))?;

@@ -1,5 +1,5 @@
 use crate::backend::{
-    errors::Error,
+    error_parser::Error,
     nodes::Statement,
     parser::Parser,
     tokens::{NonAtomic, Tokens},
