@@ -4,7 +4,8 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        error_parser::Error,
+        executor::{executor, is_truthy, handlers::h_expressions::execute_expressions},
         nodes::{Block, Expression, Signal},
     },
 };
@@ -16,90 +17,39 @@ pub fn execute_if(
     else_body: &Option<Block>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) -> Signal {
-    let condition_result = match execute_expressions(&condition, env, call_stack) {
-        Value::Bool(v) => v,
-        Value::Float(v) => {
-            if v > 0.0 {
-                true
-            } else {
-                false
-            }
-        }
-        Value::Int(v) => {
-            if v > 0 {
-                true
-            } else {
-                false
-            }
-        }
-        Value::Str(v) => {
-            if v.len() != 0 {
-                true
-            } else {
-                false
-            }
-        }
+) -> Result<Signal, Error> {
+    let condition_value = execute_expressions(condition, env, call_stack)?;
 
-        Value::Array(v) => {
-            if v.len() != 0 {
-                true
-            } else {
-                false
-            }
-        }
-        Value::Struct(_) => true,
-        Value::Enum(_) => true,
-    };
-
-    // handle condition
-    if condition_result {
-        let mut if_env = Environment::new_child(env);
-        let signal = executor(&body.statements, &mut if_env, call_stack);
+    if is_truthy(&condition_value) {
+        let if_env = Environment::new_child(env);
+        let signal = executor(&body.statements, &if_env, call_stack)?;
         if signal != Signal::None {
-            return signal;
+            return Ok(signal);
         }
-    } else if !elif_branches.is_empty() {
-        for elif_block in elif_branches {
-            let condition_result = match execute_expressions(&elif_block.0, env, call_stack) {
-                Value::Bool(v) => v,
-                Value::Float(v) => v > 0.0,
-                Value::Int(v) => v > 0,
-                Value::Str(v) => v.len() != 0,
-                Value::Array(v) => v.len() != 0,
-                Value::Struct(_) => true,
-                Value::Enum(_) => true,
-            };
+        return Ok(Signal::None);
+    }
 
-            if condition_result {
-                let mut elif_env = Environment::new_child(env);
-                let signal = executor(&elif_block.1.statements, &mut elif_env, call_stack);
-                if signal != Signal::None {
-                    return signal;
-                }
-                return Signal::None;
-            }
-        }
-
-        // no elif matched, run else if present
-        if let Some(statement_body) = else_body {
-            let mut else_env = Environment::new_child(env);
-            let signal = executor(&statement_body.statements, &mut else_env, call_stack);
+    // check elif branches
+    for (elif_cond, elif_body) in elif_branches {
+        let elif_value = execute_expressions(elif_cond, env, call_stack)?;
+        if is_truthy(&elif_value) {
+            let elif_env = Environment::new_child(env);
+            let signal = executor(&elif_body.statements, &elif_env, call_stack)?;
             if signal != Signal::None {
-                return signal;
+                return Ok(signal);
             }
-        }
-    } else {
-        match else_body {
-            Some(statement_body) => {
-                let mut else_env = Environment::new_child(env);
-                let signal = executor(&statement_body.statements, &mut else_env, call_stack);
-                if signal != Signal::None {
-                    return signal;
-                }
-            }
-            None => (),
+            return Ok(Signal::None);
         }
     }
-    Signal::None
+
+    // fall through to else
+    if let Some(else_body) = else_body {
+        let else_env = Environment::new_child(env);
+        let signal = executor(&else_body.statements, &else_env, call_stack)?;
+        if signal != Signal::None {
+            return Ok(signal);
+        }
+    }
+
+    Ok(Signal::None)
 }

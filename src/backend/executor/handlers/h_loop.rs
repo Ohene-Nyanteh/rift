@@ -4,7 +4,8 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        error_parser::Error,
+        executor::{executor, Value, handlers::h_expressions::execute_expressions},
         nodes::{Block, Expression, Signal},
     },
 };
@@ -15,29 +16,38 @@ pub fn execute_loop(
     value: &Box<Expression>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) {
-    let iter_value = match execute_expressions(&value, env, call_stack) {
+) -> Result<Signal, Error> {
+    let start_value = match execute_expressions(value, env, call_stack)? {
         Value::Int(v) => v,
-        _ => 0,
+        _ => {
+            return Err(Error::RuntimeError {
+                message: "'loop from' requires an integer start value".to_string(),
+            })
+        }
     };
 
     let variable_name = match variable.as_ref() {
         Expression::Variable(v) => v,
-        unexpected => panic!("Expected variable name, got {unexpected:?}"),
+        unexpected => {
+            return Err(Error::RuntimeError {
+                message: format!("Expected variable name in 'loop from', got {:?}", unexpected),
+            })
+        }
     };
 
     env.borrow_mut()
-        .define(variable_name.clone(), Value::Int(iter_value));
+        .define(variable_name.clone(), Value::Int(start_value));
 
     loop {
         let loop_env = Environment::new_child(env);
-        let signal = executor(&body.statements.clone(), &loop_env, call_stack);
+        let signal = executor(&body.statements, &loop_env, call_stack)?;
 
         if signal == Signal::Break {
             break;
         }
+        // continue is handled by the inner executor returning to us
 
-        let current = match env.borrow().get(&variable_name) {
+        let current = match env.borrow().get(variable_name) {
             Some(Value::Int(v)) => v,
             _ => break,
         };
@@ -45,4 +55,6 @@ pub fn execute_loop(
         env.borrow_mut()
             .define(variable_name.clone(), Value::Int(current + 1));
     }
+
+    Ok(Signal::None)
 }

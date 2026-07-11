@@ -4,7 +4,8 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        error_parser::Error,
+        executor::{executor, is_truthy, handlers::h_expressions::execute_expressions},
         nodes::{Block, Expression, Signal},
     },
 };
@@ -14,53 +15,22 @@ pub fn execute_while(
     body: &Block,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) -> Signal {
+) -> Result<Signal, Error> {
     loop {
-        let condition_result = match execute_expressions(&condition.clone(), env, call_stack) {
-            Value::Bool(v) => v,
-            Value::Float(v) => {
-                if v > 0.0 {
-                    true
-                } else {
-                    false
-                }
-            }
-            Value::Int(v) => {
-                if v > 0 {
-                    true
-                } else {
-                    false
-                }
-            }
-            Value::Str(v) => {
-                if v.len() != 0 {
-                    true
-                } else {
-                    false
-                }
-            }
-            Value::Array(v) => {
-                if v.len() != 0 {
-                    true
-                } else {
-                    false
-                }
-            }
-            Value::Struct(_) => true,
-            Value::Enum(_) => true,
-        };
+        let condition_value = execute_expressions(condition, env, call_stack)?;
 
-        if !condition_result {
+        if !is_truthy(&condition_value) {
             break;
         }
-        let mut while_env = Environment::new_child(env);
-        let signal = executor(&body.statements.clone(), &mut while_env, call_stack);
+
+        let while_env = Environment::new_child(env);
+        let signal = executor(&body.statements, &while_env, call_stack)?;
         match &signal {
             Signal::Break => break,
             Signal::Continue => continue,
-            Signal::Return(_) => return signal,
+            Signal::Return(_) => return Ok(signal),
             Signal::None => {}
         }
     }
-    Signal::None
+    Ok(Signal::None)
 }

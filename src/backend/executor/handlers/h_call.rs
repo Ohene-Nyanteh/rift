@@ -4,6 +4,7 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
+        error_parser::Error,
         executor::{executor, handlers::h_expressions::execute_expressions},
         nodes::{Expression, Identifier, Signal},
     },
@@ -14,49 +15,54 @@ pub fn execute_fn_call(
     args: &Vec<Expression>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) -> Signal {
-    // push the function unto the call Stack
+) -> Result<Signal, Error> {
+    // push the function onto the call stack
     let fn_frame = StackFrame {
         function_name: callee.0.clone(),
         return_value: None,
     };
-    // create a new Environment
     let fn_env = Environment::new_child(env);
 
-    // push fn into stack frame
     call_stack.push(fn_frame);
 
-    // get function body next
-    let function = match env.borrow().get_fn(&callee) {
-        Some(f) => f,
-        None => panic!("Error: Couldn't find function"),
-    };
+    // get function declaration
+    let function = env
+        .borrow()
+        .get_fn(callee)
+        .ok_or_else(|| Error::RuntimeError {
+            message: format!("Function '{}' is not defined", callee.0),
+        })?;
 
-    // map the values of the args with the args name and store it in the new Environment
-    for (index, expression) in args.iter().enumerate() {
-        // parse the expression and get the value
-        let value = execute_expressions(expression, env, call_stack);
-        let key = match function.args.get(index) {
-            Some(v) => v,
-            None => panic!(
-                "Error: Functions accept {:?} params, got {:?} params",
+    // validate argument count
+    if args.len() != function.args.len() {
+        return Err(Error::RuntimeError {
+            message: format!(
+                "Function '{}' expects {} argument(s), but got {}",
+                callee.0,
                 function.args.len(),
                 args.len()
             ),
-        };
-        // inserting into variables needs borrow_mut
-        let _ = fn_env.borrow_mut().variables.insert(key.clone(), value);
+        });
     }
 
-    // now execute the body
-    let signal = executor(&function.body.statements, &fn_env, call_stack);
+    // map argument values to parameter names in the new environment
+    for (index, expression) in args.iter().enumerate() {
+        let value = execute_expressions(expression, env, call_stack)?;
+        let key = &function.args[index];
+        fn_env.borrow_mut().variables.insert(key.clone(), value);
+    }
 
-    // remove the function from the stack
-    call_stack.pop(); // clean up
+    // execute the body
+    let signal = executor(&function.body.statements, &fn_env, call_stack)?;
+
+    // clean up call stack
+    call_stack.pop();
+
     match signal {
-        Signal::Return(value) => return Signal::Return(value),
-        Signal::None => {}
-        _ => panic!("Unexpected signal in function body"),
+        Signal::Return(value) => Ok(Signal::Return(value)),
+        Signal::None => Ok(Signal::None),
+        _ => Err(Error::RuntimeError {
+            message: format!("Unexpected control flow signal in function '{}'", callee.0),
+        }),
     }
-    Signal::None
 }

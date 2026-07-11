@@ -1,3 +1,7 @@
+# Trigger a Runtime Error at execution time
+print(x);
+
+
 # ============================================================
 # Rift Syntax Error Test Suite — ACTIVE VERSION
 # Run this file. It will panic on the FIRST line below.

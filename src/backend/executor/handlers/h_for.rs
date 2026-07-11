@@ -4,7 +4,8 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        error_parser::Error,
+        executor::{executor, Value, handlers::h_expressions::execute_expressions},
         nodes::{Block, Expression, Identifier, Signal},
     },
 };
@@ -15,30 +16,29 @@ pub fn execute_for(
     body: &Block,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) -> Signal {
-    // create a new environment
+) -> Result<Signal, Error> {
     let child_env = Environment::new_child(env);
-    let array = execute_expressions(&iterable, &child_env, call_stack);
+    let array = execute_expressions(iterable, &child_env, call_stack)?;
 
-    match &array {
-        Value::Array(v) => {
-            // initialize Value and check if array isnt empty
-            child_env.borrow_mut().define(var.clone(), v[0].clone());
-
-            for value in v {
-                // store value as current_value
-                child_env.borrow_mut().set(&var, value.clone());
-                let signal = executor(&body.statements, &child_env, call_stack);
-                match &signal {
-                    Signal::Break => break,
-                    Signal::Continue => continue,
-                    Signal::Return(_) => return signal,
-                    Signal::None => {}
-                }
-            }
+    let items = match &array {
+        Value::Array(v) => v.clone(),
+        _ => {
+            return Err(Error::RuntimeError {
+                message: format!("for-in requires an array, got {:?}", array),
+                })
         }
-        _ => panic!("Variable passed in for loop must be an Array"),
     };
 
-    Signal::None
+    for value in &items {
+        child_env.borrow_mut().define(var.clone(), value.clone());
+        let signal = executor(&body.statements, &child_env, call_stack)?;
+        match &signal {
+            Signal::Break => break,
+            Signal::Continue => continue,
+            Signal::Return(_) => return Ok(signal),
+            Signal::None => {}
+        }
+    }
+
+    Ok(Signal::None)
 }

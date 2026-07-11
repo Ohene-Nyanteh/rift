@@ -5,10 +5,8 @@ pub mod tokens;
 #[derive(Debug, Clone)]
 pub enum Error {
     UnexpectedToken { expected: Tokens, found: Tokens, at: Span, error_line: String, col_start: usize, col_end: usize },
+    RuntimeError { message: String },
     UnexpectedEOF,
-    // InvalidCall,
-    // InvalidSyntax(String),
-    // Custom(String),
 }
 
 impl std::fmt::Display for Error {
@@ -28,7 +26,7 @@ impl std::fmt::Display for Error {
                 let gutter_width = line_num.to_string().len().max(3);
                 let underline_len = col_end.saturating_sub(*col_start).max(1);
 
-                writeln!(f, "{RED}error{RESET}{BOLD}: Unexpected token{RESET}")?;
+                writeln!(f, "{RED}ParserError:{RESET}")?;
                 writeln!(
                     f,
                     "{:width$}{CYAN}-->{RESET} line {}, column {}-{}",
@@ -48,6 +46,10 @@ impl std::fmt::Display for Error {
                 writeln!(f, "{:width$} {CYAN}|{RESET}", "", width = gutter_width)?;
                 writeln!(f, "{:width$} {DIM}= expected:{RESET} {}", "", expected_value, width = gutter_width)?;
                 write!(f, "{:width$} {DIM}=    found:{RESET} {}", "", found_value, width = gutter_width)
+            }
+            Error::RuntimeError { message } => {
+                write!(f, "{RED}RuntimeError{RESET}")?;
+                write!(f, ": {}", message)
             }
             Error::UnexpectedEOF => write!(f, "{RED}error{RESET}{BOLD}: unexpected end of file{RESET}"),
         }

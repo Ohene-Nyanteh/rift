@@ -4,7 +4,8 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
-        executor::{Value, executor, handlers::h_expressions::execute_expressions},
+        error_parser::Error,
+        executor::{executor, handlers::h_expressions::execute_expressions},
         nodes::{Block, Expression},
     },
 };
@@ -14,23 +15,26 @@ pub fn execute_match(
     arms: &Vec<(Box<Expression>, Block)>,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) {
-    let value = execute_expressions(value, env, call_stack);
+) -> Result<(), Error> {
+    let match_value = execute_expressions(value, env, call_stack)?;
 
     for arm in arms {
-        let arm_value: Option<Value>;
-        match *arm.0.clone() {
+        match arm.0.as_ref() {
+            // `default` arm matches anything (parsed as a variable)
             Expression::Variable(_) => {
-                executor(&arm.1.statements, env, call_stack);
+                executor(&arm.1.statements, env, call_stack)?;
+                return Ok(());
             }
-            _ => {
-                arm_value = Some(execute_expressions(&arm.0, env, call_stack));
-                let arm_v = arm_value.expect("Error: Couldnt parse match arm value");
-                if value == arm_v {
-                    executor(&arm.1.statements, env, call_stack);
-                    break;
+            arm_expr => {
+                let arm_value = execute_expressions(arm_expr, env, call_stack)?;
+                if match_value == arm_value {
+                    executor(&arm.1.statements, env, call_stack)?;
+                    return Ok(());
                 }
             }
         }
     }
+
+    // No arm matched, just fall through
+    Ok(())
 }

@@ -4,6 +4,7 @@ use crate::{
     StackFrame,
     backend::{
         environment::Environment,
+        error_parser::Error,
         executor::{Value, handlers::h_call::execute_fn_call},
         nodes::{Expression, Signal},
         tokens::{Operations, Primary},
@@ -14,195 +15,250 @@ pub fn execute_expressions(
     expression: &Expression,
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
-) -> Value {
+) -> Result<Value, Error> {
     match expression {
-        Expression::Literal(value) => match value {
+        Expression::Literal(value) => Ok(match value {
             Primary::Int(v) => Value::Int(*v),
             Primary::Float(v) => Value::Float(*v),
             Primary::Bool(v) => Value::Bool(*v),
             Primary::Str(v) => Value::Str(v.clone()),
-        },
+        }),
 
         Expression::Unary { op, expr } => {
-            let value = execute_expressions(expr, env, call_stack);
+            let value = execute_expressions(expr, env, call_stack)?;
 
-            match op {
+            match *op {
                 Operations::Sub => match value {
-                    Value::Int(v) => Value::Int(-v),
-                    Value::Float(v) => Value::Float(-v),
-                    _ => panic!("Unary '-' not supported for this type"),
+                    Value::Int(v) => Ok(Value::Int(-v)),
+                    Value::Float(v) => Ok(Value::Float(-v)),
+                    _ => Err(Error::RuntimeError {
+                        message: "Unary '-' is only supported for numbers".to_string(),
+                    }),
                 },
 
                 Operations::Not => match value {
-                    Value::Bool(v) => Value::Bool(!v),
-                    _ => panic!("Unary 'not' only works on bool"),
+                    Value::Bool(v) => Ok(Value::Bool(!v)),
+                    _ => Err(Error::RuntimeError {
+                        message: "'!' only works on booleans".to_string(),
+                    }),
                 },
 
-                _ => panic!("Unsupported unary operation"),
+                _ => Err(Error::RuntimeError {
+                    message: format!("Unsupported unary operation {:?}", op),
+                }),
             }
         }
         Expression::Binary { op, lhs, rhs } => {
-            let left = execute_expressions(lhs, env, call_stack);
-            let right = execute_expressions(rhs, env, call_stack);
+            let left = execute_expressions(lhs, env, call_stack)?;
+            let right = execute_expressions(rhs, env, call_stack)?;
+
             match op {
-                Operations::Add => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Int(a + b),
-                    (Value::Float(a), Value::Float(b)) => Value::Float(a + b),
-                    (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 + b),
-                    (Value::Float(a), Value::Int(b)) => Value::Float(a + b as f64),
-                    (Value::Str(a), Value::Int(b)) => Value::Str(a + &b.to_string()),
-                    (Value::Str(a), Value::Float(b)) => Value::Str(a + &b.to_string()),
-                    (Value::Str(a), Value::Bool(b)) => Value::Str(a + &b.to_string()),
-                    (Value::Str(a), Value::Str(b)) => Value::Str(a + &b),
-
-                    _ => panic!("Invalid types for +"),
+                Operations::Add => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a + b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a + b)),
+                    (Value::Int(a), Value::Float(b)) => Ok(Value::Float(*a as f64 + b)),
+                    (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a + *b as f64)),
+                    (Value::Str(a), Value::Int(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+                    (Value::Str(a), Value::Float(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+                    (Value::Str(a), Value::Bool(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+                    (Value::Str(a), Value::Str(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'+' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::Sub => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Int(a - b),
-                    (Value::Float(a), Value::Float(b)) => Value::Float(a - b),
-                    (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 - b),
-                    (Value::Float(a), Value::Int(b)) => Value::Float(a - b as f64),
-                    _ => panic!("Invalid types for -"),
+                Operations::Sub => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a - b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a - b)),
+                    (Value::Int(a), Value::Float(b)) => Ok(Value::Float(*a as f64 - b)),
+                    (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a - *b as f64)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'-' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::Mul => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Int(a * b),
-                    (Value::Float(a), Value::Float(b)) => Value::Float(a * b),
-                    (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 * b),
-                    (Value::Float(a), Value::Int(b)) => Value::Float(a * b as f64),
-                    _ => panic!("Invalid types for *"),
+                Operations::Mul => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a * b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a * b)),
+                    (Value::Int(a), Value::Float(b)) => Ok(Value::Float(*a as f64 * b)),
+                    (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a * *b as f64)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'*' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::Div => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Int(a / b),
-                    (Value::Float(a), Value::Float(b)) => Value::Float(a / b),
-                    (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 / b),
-                    (Value::Float(a), Value::Int(b)) => Value::Float(a / b as f64),
-                    _ => panic!("Invalid types for /"),
+                Operations::Div => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a / b)),
+                    (Value::Int(a), Value::Float(b)) => Ok(Value::Float(*a as f64 / b)),
+                    (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a / *b as f64)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'/' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::Mod => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Int(a % b),
-                    (Value::Float(a), Value::Float(b)) => Value::Float(a % b),
-                    (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 % b),
-                    (Value::Float(a), Value::Int(b)) => Value::Float(a % b as f64),
-                    _ => panic!("Invalid types for /"),
+                Operations::Mod => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a % b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a % b)),
+                    (Value::Int(a), Value::Float(b)) => Ok(Value::Float(*a as f64 % b)),
+                    (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a % *b as f64)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'%' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::And => match (left, right) {
-                    (Value::Bool(a), Value::Bool(b)) => Value::Bool(a && b),
-                    _ => panic!("AND only works on bool"),
+                Operations::And => match (&left, &right) {
+                    (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a && *b)),
+                    _ => Err(Error::RuntimeError {
+                        message: "'&' only works on booleans".to_string(),
+                    }),
                 },
 
-                Operations::Or => match (left, right) {
-                    (Value::Bool(a), Value::Bool(b)) => Value::Bool(a || b),
-                    _ => panic!("OR only works on bool"),
+                Operations::Or => match (&left, &right) {
+                    (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a || *b)),
+                    _ => Err(Error::RuntimeError {
+                        message: "'|' only works on booleans".to_string(),
+                    }),
                 },
 
-                Operations::EqualTo => Value::Bool(left == right),
-                Operations::NotEqualTo => Value::Bool(left != right),
+                Operations::EqualTo => Ok(Value::Bool(left == right)),
+                Operations::NotEqualTo => Ok(Value::Bool(left != right)),
 
-                Operations::GreaterThan => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Bool(a > b),
-                    (Value::Float(a), Value::Float(b)) => Value::Bool(a > b),
-                    _ => panic!("Invalid comparison"),
+                Operations::GreaterThan => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a > b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a > b)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'>' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::LessThan => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Bool(a < b),
-                    (Value::Float(a), Value::Float(b)) => Value::Bool(a < b),
-                    _ => panic!("Invalid comparison"),
+                Operations::LessThan => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a < b)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'<' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::LessOrEquals => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Bool(a <= b),
-                    (Value::Float(a), Value::Float(b)) => Value::Bool(a <= b),
-                    _ => panic!("Invalid comparison"),
+                Operations::LessOrEquals => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a <= b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a <= b)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'<=' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                Operations::GreaterOrEquals => match (left, right) {
-                    (Value::Int(a), Value::Int(b)) => Value::Bool(a >= b),
-                    (Value::Float(a), Value::Float(b)) => Value::Bool(a >= b),
-                    _ => panic!("Invalid comparison"),
+                Operations::GreaterOrEquals => match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a >= b)),
+                    (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a >= b)),
+                    _ => Err(Error::RuntimeError {
+                        message: format!("'>=' not supported between {:?} and {:?}", left, right),
+                    }),
                 },
 
-                _ => panic!("Operation not implemented yet"),
+                unexpected => Err(Error::RuntimeError {
+                    message: format!("Unexpected binary operation {:?}", unexpected),
+                }),
             }
         }
 
         Expression::Variable(key) => {
-            let value = env.borrow().get(&key);
-            let var = match value {
-                Some(value) => value,
-                None => {
-                    panic!("Variable value doesn't exist");
-                }
-            };
-
-            var.clone()
+            let value = env.borrow().get(key);
+            match value {
+                Some(val) => Ok(val.clone()),
+                None => Err(Error::RuntimeError {
+                    message: format!("Variable '{}' is not defined", key.0),
+                }),
+            }
         }
 
         Expression::FnCall(fn_call) => {
-            let value = match execute_fn_call(&fn_call.callee, &fn_call.args, env, call_stack) {
-                Signal::Return(v) => v,
-                _ => Value::Int(0),
-            };
-
-            value
+            let signal =
+                execute_fn_call(&fn_call.callee, &fn_call.args, env, call_stack)?;
+            match signal {
+                Signal::Return(v) => Ok(v),
+                _ => Ok(Value::Int(0)),
+            }
         }
 
         Expression::ArrayLiteral(items) => {
             let values = items
-                .into_iter()
+                .iter()
                 .map(|item| execute_expressions(item, env, call_stack))
-                .collect();
-            Value::Array(values)
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(Value::Array(values))
         }
 
         Expression::ArrayIndex { target, index } => {
-            let arr = match execute_expressions(target, env, call_stack) {
+            let arr = match execute_expressions(target, env, call_stack)? {
                 Value::Array(v) => v,
-                _ => panic!("Cannot index into a non-array"),
+                other => {
+                    return Err(Error::RuntimeError {
+                        message: format!("Cannot index into a non-array value: {:?}", other),
+                    })
+                }
             };
-            let idx = match execute_expressions(index, env, call_stack) {
+
+            let idx = match execute_expressions(index, env, call_stack)? {
                 Value::Int(i) => i as usize,
-                _ => panic!("Array index must be an integer"),
+                other => {
+                    return Err(Error::RuntimeError {
+                        message: format!("Array index must be an integer, got {:?}", other),
+                    })
+                }
             };
-            arr[idx].clone()
+
+            match arr.get(idx) {
+                Some(val) => Ok(val.clone()),
+                None => Err(Error::RuntimeError {
+                    message: format!("Index {} out of bounds for array of length {}", idx, arr.len()),
+                }),
+            }
         }
 
         Expression::EnumCall { name, variant } => {
-            let var = env.borrow().get(&name);
-            let variants = match var {
-                Some(value) => value,
-                None => {
-                    panic!("Enum value doesn't exist");
+            let value = env.borrow().get(name);
+            let variants = match value {
+                Some(val) => val,
+                None => return Err(Error::RuntimeError {
+                    message: format!("Variable '{}' is not defined", name.0),
+                }),
+            };
+
+            match variants {
+                Value::Enum(v) => {
+                    if v.contains(&Value::Str(variant.0.clone())) {
+                        Ok(Value::Str(variant.0.clone()))
+                    } else {
+                        Err(Error::RuntimeError {
+                            message: format!("Variant '{}' does not exist in enum '{}'", variant.0, name.0),
+                        })
+                    }
                 }
-            };
-
-            let is_in_var = match variants {
-                Value::Enum(v) => v.contains(&Value::Str(variant.0.clone())),
-                unexpected => panic!("Expected An Enum, got a {unexpected:?}"),
-            };
-
-            if !is_in_var {
-                panic!("Variant doesnt exist in Enum")
+                unexpected => Err(Error::RuntimeError {
+                    message: format!("'{}' is not an enum, got {:?}", name.0, unexpected),
+                }),
             }
-
-            Value::Str(variant.0.clone())
         }
 
         Expression::StructCall { target, field } => {
-            let struct_value = env.borrow().get(target).expect("Struct Doesnt Exist");
+            let struct_value = env
+                .borrow()
+                .get(target)
+                .ok_or_else(|| Error::RuntimeError {
+                    message: format!("Variable '{}' is not defined", target.0),
+                })?;
+
             match struct_value {
-                Value::Struct(values) => {
-                    let field_value = values
-                        .get(&field.0.clone())
-                        .expect("Struct field Doesnt exist");
-                    field_value.clone()
-                }
-                unexpected => panic!("Error: Expected a struct, got: {unexpected:?}"),
+                Value::Struct(fields) => match fields.get(&field.0) {
+                    Some(val) => Ok(val.clone()),
+                    None => Err(Error::RuntimeError {
+                        message: format!("Struct '{}' has no field '{}'", target.0, field.0),
+                    }),
+                },
+                unexpected => Err(Error::RuntimeError {
+                    message: format!("'{}' is not a struct, got {:?}", target.0, unexpected),
+                }),
             }
         }
 
@@ -211,18 +267,28 @@ pub fn execute_expressions(
             field,
             new_value,
         } => {
-            let struct_variable = env.borrow().get(target).expect("Struct doesn't exist");
+            let struct_variable = env
+                .borrow()
+                .get(target)
+                .ok_or_else(|| Error::RuntimeError {
+                    message: format!("Variable '{}' is not defined", target.0),
+                })?;
+
             match struct_variable {
                 Value::Struct(mut fields) => {
                     if !fields.contains_key(&field.0) {
-                        panic!("Struct field '{}' doesn't exist", field.0);
+                        return Err(Error::RuntimeError {
+                            message: format!("Struct '{}' has no field '{}'", target.0, field.0),
+                        });
                     }
-                    let value = execute_expressions(new_value, env, call_stack);
+                    let value = execute_expressions(new_value, env, call_stack)?;
                     fields.insert(field.0.clone(), value);
                     env.borrow_mut().set(target, Value::Struct(fields));
-                    Value::Int(0)
+                    Ok(Value::Int(0))
                 }
-                unexpected => panic!("Error: Expected a struct, got: {unexpected:?}"),
+                unexpected => Err(Error::RuntimeError {
+                    message: format!("'{}' is not a struct, got {:?}", target.0, unexpected),
+                }),
             }
         }
     }
