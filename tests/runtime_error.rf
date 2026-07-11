@@ -1,29 +1,9 @@
-fn level1() {
+fn inner() {
     print(x);
 }
 
-fn level2() {
-    level1();
+fn outer() {
+    inner();
 }
 
-fn level3() {
-    level2();
-}
-
-fn level4() {
-    level3();
-}
-
-fn level5() {
-    level4();
-}
-
-fn level6() {
-    level5();
-}
-
-fn level7() {
-    level6();
-}
-
-level7();
+outer();

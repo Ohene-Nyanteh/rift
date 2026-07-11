@@ -25,6 +25,6 @@ pub fn execute_enums(
         })
         .collect::<Result<Vec<_>, _>>()?;
     env.borrow_mut()
-        .define(enum_decl.name.clone(), Value::Enum(values));
+        .define(enum_decl.name.clone(), Value::Enum(Rc::new(values)));
     Ok(())
 }

@@ -30,9 +30,9 @@ pub enum Value {
     Float(f64),
     Bool(bool),
     Str(String),
-    Array(Vec<Value>),
-    Enum(Vec<Value>), // Str(Variant)
-    Struct(HashMap<String, Value>),
+    Array(Rc<Vec<Value>>),
+    Enum(Rc<Vec<Value>>), // Str(Variant)
+    Struct(Rc<HashMap<String, Value>>),
 }
 
 use crate::backend::error_parser::Error;

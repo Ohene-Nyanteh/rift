@@ -1,0 +1,32 @@
+# Benchmark: Memory + speed test for Rc vs deep copy
+# Large struct with an array field, passed through nested functions.
+# Old version: deep copies the array at every function call + every nest level.
+# New version: shares everything via Rc.
+
+struct Data {
+    id: 0,
+    a: 0, b: 0, c: 0, d: 0, e: 0,
+    f: 0, g: 0, h: 0, i: 0, j: 0,
+    k: 0, l: 0, m: 0, n: 0, o: 0,
+    p: 0, q: 0, r: 0, s: 0, t: 0,
+    u: "hello", v: "world", w: "rift", x: "test", y: "data",
+    items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+}
+
+fn level5(d) { return d.id; }
+fn level4(d) { return level5(d); }
+fn level3(d) { return level4(d); }
+fn level2(d) { return level3(d); }
+fn level1(d) { return level2(d); }
+
+let base = Data;
+base.id = 42;
+
+let i = 0;
+while (i < 1000000) {
+    let result = level1(base);
+    i = i + 1;
+}
+
+print("done");

@@ -24,6 +24,6 @@ pub fn execute_struct(
         })
         .collect::<Result<HashMap<String, Value>, _>>()?;
     env.borrow_mut()
-        .define(struct_decl.name.clone(), Value::Struct(fields));
+        .define(struct_decl.name.clone(), Value::Struct(Rc::new(fields)));
     Ok(())
 }

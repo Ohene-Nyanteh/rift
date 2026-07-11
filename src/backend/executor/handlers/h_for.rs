@@ -21,7 +21,7 @@ pub fn execute_for(
     let array = execute_expressions(iterable, &child_env, call_stack)?;
 
     let items = match &array {
-        Value::Array(v) => v.clone(),
+        Value::Array(v) => Rc::clone(v),
         _ => {
             return Err(Error::RuntimeError {
                 message: format!("for-in requires an array, got {:?}", array),
@@ -29,7 +29,7 @@ pub fn execute_for(
         }
     };
 
-    for value in &items {
+    for value in items.iter() {
         child_env.borrow_mut().define(var.clone(), value.clone());
         let signal = executor(&body.statements, &child_env, call_stack)?;
         match &signal {

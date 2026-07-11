@@ -186,7 +186,7 @@ pub fn execute_expressions(
                 .iter()
                 .map(|item| execute_expressions(item, env, call_stack))
                 .collect::<Result<Vec<_>, _>>()?;
-            Ok(Value::Array(values))
+            Ok(Value::Array(Rc::new(values)))
         }
 
         Expression::ArrayIndex { target, index } => {
@@ -276,13 +276,13 @@ pub fn execute_expressions(
 
             match struct_variable {
                 Value::Struct(mut fields) => {
-                    if !fields.contains_key(&field.0) {
+                    if !Rc::make_mut(&mut fields).contains_key(&field.0) {
                         return Err(Error::RuntimeError {
                             message: format!("Struct '{}' has no field '{}'", target.0, field.0),
                         });
                     }
                     let value = execute_expressions(new_value, env, call_stack)?;
-                    fields.insert(field.0.clone(), value);
+                    Rc::make_mut(&mut fields).insert(field.0.clone(), value);
                     env.borrow_mut().set(target, Value::Struct(fields));
                     Ok(Value::Int(0))
                 }
