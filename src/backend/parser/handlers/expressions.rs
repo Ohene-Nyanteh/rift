@@ -32,7 +32,7 @@ impl Parser {
                 self.next();
 
                 // check if it's a function call: name(...)
-                match self.peek() {
+                let mut expr = match self.peek() {
                     Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LParen) => {
                         // parse as a call expression (no semicolon consumed)
                         let call_expr = self.parse_call_expr(Identifier(v))?;
@@ -49,14 +49,29 @@ impl Parser {
                         Box::new(enum_exp)
                     }
                     Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::Dot) => {
-                        let struct_exp = self.parse_struct_call(Identifier(v))?;
+                        let struct_exp = self.parse_struct_call(Box::new(Expression::Variable(Identifier(v))))?;
                         struct_exp
                     }
                     _ => {
                         // plain variable reference
                         Box::new(Expression::Variable(Identifier(v)))
                     }
+                };
+
+                // chain: handle .field and [index] after fn call / array index
+                loop {
+                    match self.peek() {
+                        Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::Dot) => {
+                            expr = self.parse_struct_call(expr)?;
+                        }
+                        Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::LSquareBraces) => {
+                            expr = self.parse_array_index_chain(expr)?;
+                        }
+                        _ => break,
+                    }
                 }
+
+                expr
             }
             // unary: -x or !x
             Tokens::Atomic(Operations::Sub) => {

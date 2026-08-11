@@ -18,6 +18,21 @@ impl Parser {
         })
     }
 
+    pub fn parse_array_index_chain(&mut self, target: Box<Expression>) -> Result<Box<Expression>, Error> {
+        // target is already consumed, we're looking at [
+        self.next();
+
+        let index = self.parse_expressions(0, Tokens::Primary(Primary::Str("Int value".to_string())))?;
+
+        // expect ]
+        self.expect(Tokens::NonAtomic(NonAtomic::RSquareBraces))?;
+
+        Ok(Box::new(Expression::ArrayIndex {
+            target,
+            index,
+        }))
+    }
+
     pub fn parse_array_index(&mut self, name: Identifier) -> Result<Statement, Error> {
         // get the current value
         let array_index_exp = self.parse_array_index_expr(name.clone())?;

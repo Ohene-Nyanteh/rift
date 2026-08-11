@@ -97,11 +97,11 @@ pub enum Expression {
         index: Box<Expression>,
     },
     StructCall {
-        target: Identifier,
+        target: Box<Expression>,
         field: Identifier,
     },
     StructAssignment {
-        target: Identifier,
+        target: Box<Expression>,
         field: Identifier,
         new_value: Box<Expression>,
     },

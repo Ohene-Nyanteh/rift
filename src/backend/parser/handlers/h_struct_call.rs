@@ -6,10 +6,10 @@ use crate::backend::{
 };
 
 impl Parser {
-    pub fn parse_struct_call(&mut self, name: Identifier) -> Result<Box<Expression>, Error> {
+    pub fn parse_struct_call(&mut self, target: Box<Expression>) -> Result<Box<Expression>, Error> {
         let statement_exp: Box<Expression>;
 
-        // skip the dot
+        // consume the dot
         self.expect(Tokens::NonAtomic(NonAtomic::Dot))?;
 
         // check the value expected
@@ -35,13 +35,13 @@ impl Parser {
             let expression = self.parse_expressions(0, expected)?;
 
             statement_exp = Box::new(Expression::StructAssignment {
-                target: name.clone(),
+                target,
                 field: field.clone(),
                 new_value: expression,
             });
         } else {
             statement_exp = Box::new(Expression::StructCall {
-                target: name,
+                target,
                 field: field,
             });
         };

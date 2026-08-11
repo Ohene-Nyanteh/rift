@@ -1,7 +1,5 @@
-use std::panic;
-
 use crate::backend::error_parser::Error;
-use crate::backend::nodes::{Identifier, Statement};
+use crate::backend::nodes::{Expression, Identifier, Statement};
 use crate::backend::parser::{Parser, col_for};
 use crate::backend::tokens::{NonAtomic, Primary, Tokens};
 
@@ -31,7 +29,7 @@ impl Parser {
             Tokens::NonAtomic(NonAtomic::LSquareBraces) => self.parse_array_index(name),
             Tokens::NonAtomic(NonAtomic::LParen) => self.parse_function_call(name),
             Tokens::NonAtomic(NonAtomic::Dot) => {
-                let value = self.parse_struct_call(name)?;
+                let value = self.parse_struct_call(Box::new(Expression::Variable(name)))?;
                 self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
                 Ok(Statement::Expression(value))
             }

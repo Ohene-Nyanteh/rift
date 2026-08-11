@@ -3,7 +3,7 @@ use crate::backend::{
     nodes::{Expression, Identifier, Statement, StructDecl},
     parser::{Parser, col_for},
     tokens::{
-        NonAtomic, Primary, Token, Tokens::{self}
+        NonAtomic, Operations, Primary, Token, Tokens::{self}
     },
 };
 
@@ -94,6 +94,29 @@ impl Parser {
     ) -> Result<(Identifier, Expression), Error> {
         match token.kind.clone() {
             Tokens::Primary(v) => Ok((name.clone(), Expression::Literal(v))),
+            Tokens::NonAtomic(NonAtomic::LSquareBraces) => {
+                // array literal — the [ was already consumed by self.next()
+                let mut items: Vec<Box<Expression>> = Vec::new();
+                loop {
+                    match self.peek() {
+                        Some(t) if t.kind == Tokens::NonAtomic(NonAtomic::RSquareBraces) => {
+                            self.next();
+                            break
+                        },
+                        Some(t) if t.kind == Tokens::EOF => return Err(Error::UnexpectedEOF),
+                        None => return Err(Error::UnexpectedEOF),
+                        _ => {
+                            items.push(self.parse_expressions(0, Tokens::Primary(Primary::Str("value".to_string())))?);
+                            if let Some(t) = self.peek() {
+                                if t.kind == Tokens::NonAtomic(NonAtomic::Comma) {
+                                    self.next();
+                                }
+                            }
+                        }
+                    }
+                }
+                Ok((name.clone(), Expression::ArrayLiteral(items)))
+            }
             Tokens::Variable(var) => {
                 // check if its a normal var or an enum
                 let next_token = self.peek().ok_or(Error::UnexpectedEOF)?;
@@ -107,6 +130,14 @@ impl Parser {
                         Ok((name.clone(), Expression::Variable(Identifier(var))))
                     }
                 }
+            }
+            Tokens::Atomic(Operations::Sub) => {
+                let expr = self.parse_expressions(7, Tokens::Primary(Primary::Str("value".to_string())))?;
+                Ok((name.clone(), Expression::Unary { op: Operations::Sub, expr }))
+            }
+            Tokens::Atomic(Operations::Not) => {
+                let expr = self.parse_expressions(7, Tokens::Primary(Primary::Str("value".to_string())))?;
+                Ok((name.clone(), Expression::Unary { op: Operations::Not, expr }))
             }
             unexpected => {
                 return  Err(Error::UnexpectedToken{

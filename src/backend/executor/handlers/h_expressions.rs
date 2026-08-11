@@ -62,6 +62,11 @@ pub fn execute_expressions(
                     (Value::Str(a), Value::Float(b)) => Ok(Value::Str(format!("{}{}", a, b))),
                     (Value::Str(a), Value::Bool(b)) => Ok(Value::Str(format!("{}{}", a, b))),
                     (Value::Str(a), Value::Str(b)) => Ok(Value::Str(format!("{}{}", a, b))),
+                    (Value::Array(a), Value::Array(b)) => {
+                        let mut merged = Vec::clone(a);
+                        merged.extend(Vec::clone(b));
+                        Ok(Value::Array(Rc::new(merged)))
+                    }
                     _ => Err(Error::RuntimeError {
                         message: format!("'+' not supported between {:?} and {:?}", left, right),
                     }),
@@ -242,22 +247,16 @@ pub fn execute_expressions(
         }
 
         Expression::StructCall { target, field } => {
-            let struct_value = env
-                .borrow()
-                .get(target)
-                .ok_or_else(|| Error::RuntimeError {
-                    message: format!("Variable '{}' is not defined", target.0),
-                })?;
-
-            match struct_value {
+            let target_value = execute_expressions(target, env, call_stack)?;
+            match target_value {
                 Value::Struct(fields) => match fields.get(&field.0) {
                     Some(val) => Ok(val.clone()),
                     None => Err(Error::RuntimeError {
-                        message: format!("Struct '{}' has no field '{}'", target.0, field.0),
+                        message: format!("Struct has no field '{}'", field.0),
                     }),
                 },
-                unexpected => Err(Error::RuntimeError {
-                    message: format!("'{}' is not a struct, got {:?}", target.0, unexpected),
+                other => Err(Error::RuntimeError {
+                    message: format!("Cannot access field on {:?}", other),
                 }),
             }
         }
@@ -267,27 +266,35 @@ pub fn execute_expressions(
             field,
             new_value,
         } => {
-            let struct_variable = env
-                .borrow()
-                .get(target)
-                .ok_or_else(|| Error::RuntimeError {
-                    message: format!("Variable '{}' is not defined", target.0),
-                })?;
+            let value = execute_expressions(new_value, env, call_stack)?;
 
-            match struct_variable {
-                Value::Struct(mut fields) => {
-                    if !Rc::make_mut(&mut fields).contains_key(&field.0) {
-                        return Err(Error::RuntimeError {
-                            message: format!("Struct '{}' has no field '{}'", target.0, field.0),
-                        });
+            match target.as_ref() {
+                Expression::Variable(name) => {
+                    let struct_variable = env
+                        .borrow()
+                        .get(name)
+                        .ok_or_else(|| Error::RuntimeError {
+                            message: format!("Variable '{}' is not defined", name.0),
+                        })?;
+
+                    match struct_variable {
+                        Value::Struct(mut fields) => {
+                            if !Rc::make_mut(&mut fields).contains_key(&field.0) {
+                                return Err(Error::RuntimeError {
+                                    message: format!("Struct '{}' has no field '{}'", name.0, field.0),
+                                });
+                            }
+                            Rc::make_mut(&mut fields).insert(field.0.clone(), value);
+                            env.borrow_mut().set(name, Value::Struct(fields));
+                            Ok(Value::Int(0))
+                        }
+                        other => Err(Error::RuntimeError {
+                            message: format!("'{}' is not a struct, got {:?}", name.0, other),
+                        }),
                     }
-                    let value = execute_expressions(new_value, env, call_stack)?;
-                    Rc::make_mut(&mut fields).insert(field.0.clone(), value);
-                    env.borrow_mut().set(target, Value::Struct(fields));
-                    Ok(Value::Int(0))
                 }
-                unexpected => Err(Error::RuntimeError {
-                    message: format!("'{}' is not a struct, got {:?}", target.0, unexpected),
+                _ => Err(Error::RuntimeError {
+                    message: "Assignment to a non-variable struct target is not yet supported".to_string(),
                 }),
             }
         }

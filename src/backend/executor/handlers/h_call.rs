@@ -5,7 +5,7 @@ use crate::{
     backend::{
         environment::Environment,
         error_parser::Error,
-        executor::{executor, handlers::h_expressions::execute_expressions},
+        executor::{executor, Value, handlers::h_expressions::execute_expressions},
         nodes::{Expression, Identifier, Signal},
     },
 };
@@ -16,6 +16,24 @@ pub fn execute_fn_call(
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) -> Result<Signal, Error> {
+    // built-in functions
+    if callee.0 == "len" {
+        if args.len() != 1 {
+            return Err(Error::RuntimeError {
+                message: format!("len() expects 1 argument, got {}", args.len()),
+            });
+        }
+        let val = execute_expressions(&args[0], env, call_stack)?;
+        let len = match val {
+            Value::Array(a) => a.len() as i64,
+            Value::Str(s) => s.len() as i64,
+            other => return Err(Error::RuntimeError {
+                message: format!("len() expects an array or string, got {:?}", other),
+            }),
+        };
+        return Ok(Signal::Return(Value::Int(len)));
+    }
+
     // push the function onto the call stack
     let fn_frame = StackFrame {
         function_name: callee.0.clone(),

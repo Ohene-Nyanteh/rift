@@ -1,0 +1,28 @@
+struct Node {
+    value: 0,
+    next: -1,      # -1 means null / end of list
+}
+
+let nodes = [];
+let head = -1;
+
+fn push_front(val) {
+    let n = Node;
+    n.value = val;
+    n.next = head;
+    nodes = nodes + [n];          # append to arena
+    head = len(nodes) - 1;        # index of new node
+}
+
+fn traverse() {
+    let cur = head;
+    while (cur != -1) {
+        print(nodes[cur].value);
+        cur = nodes[cur].next;
+    }
+}
+
+push_front(10);
+push_front(20);
+push_front(30);
+traverse();  # 30, 20, 10
