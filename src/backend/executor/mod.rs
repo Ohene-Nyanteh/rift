@@ -56,6 +56,8 @@ pub fn executor(
 ) -> Result<Signal, Error> {
     for statement in ast {
         match statement {
+            // Imports are resolved when the module tree is built, before execution.
+            Statement::Import { .. } => {}
             Statement::Print(exp) => {
                 let value = execute_expressions(exp, env, call_stack)?;
                 execute_print(&value);

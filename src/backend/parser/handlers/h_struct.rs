@@ -84,7 +84,7 @@ impl Parser {
             }
         }
 
-        Ok(Statement::Struct(Box::new(StructDecl { name, fields })))
+        Ok(Statement::Struct(Box::new(StructDecl { name, fields})))
     }
 
     fn parse_struct_value_exp(

@@ -56,7 +56,9 @@ fn convert_keywords_to_values(keyword: &Keywords) -> String {
         Keywords::Continue => String::from("continue"),
         Keywords::Print => String::from("print"),
         Keywords::Return => String::from("return"),
-        Keywords::In => String::from("in")
+        Keywords::In => String::from("in"),
+        Keywords::Export => String::from("export"),
+        Keywords::Import => String::from("import")
     }
 }
 

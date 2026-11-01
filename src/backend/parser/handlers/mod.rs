@@ -18,4 +18,6 @@ pub mod h_struct;
 pub mod h_struct_call;
 pub mod h_variables;
 pub mod h_while;
+pub mod h_imports;
+pub mod h_exports;
 // pub use h_let::{Parser};

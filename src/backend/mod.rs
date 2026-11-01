@@ -6,3 +6,4 @@ pub mod lexer;
 pub mod nodes;
 pub mod parser;
 pub mod tokens;
+pub mod module_system;

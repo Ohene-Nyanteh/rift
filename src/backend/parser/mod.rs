@@ -2,6 +2,8 @@ use super::nodes::Statement;
 use crate::{LexerOutput, backend::{error_parser::Error, tokens::{Keywords, NonAtomic, Primary, Token, Tokens}}};
 pub mod handlers;
 
+
+
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
@@ -11,6 +13,9 @@ pub struct Parser {
 }
 
 
+
+
+
 pub fn col_for(offset: usize, row: usize, line_starts: &[usize]) -> usize {
     offset - line_starts[row]
 }
@@ -18,7 +23,12 @@ pub fn col_for(offset: usize, row: usize, line_starts: &[usize]) -> usize {
 
 impl Parser {
     pub fn new(lexer_output: LexerOutput) -> Self {
-        Self { tokens: lexer_output.tokens, source_map: lexer_output.source_map,line_starts: lexer_output.line_starts, pos: 0 }
+        Self {
+            tokens: lexer_output.tokens,
+            source_map: lexer_output.source_map,
+            line_starts: lexer_output.line_starts,
+            pos: 0
+        }
     }
 
     pub fn peek(&self) -> Option<&Token> {
@@ -122,6 +132,14 @@ impl Parser {
             Tokens::Keyword(Keywords::Print) => {
                 self.next();
                 self.parse_print()
+            }
+            Tokens::Keyword(Keywords::Import) => {
+                self.next();
+                self.handle_imports()
+            }
+            Tokens::Keyword(Keywords::Export) => {
+                self.next();
+                self.handle_exports()
             }
             Tokens::Variable(_) => self.parse_variables_or_function_calls(),
             Tokens::EOF => Err(Error::UnexpectedEOF),

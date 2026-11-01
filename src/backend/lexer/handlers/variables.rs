@@ -8,11 +8,18 @@ pub fn handle_variable(
     tokens: &mut Vec<Token>,
     row: &usize,
 ) -> Option<usize> {
-    if !current_char.is_alphabetic() {
+
+    if current_char != &'@' && !current_char.is_alphabetic() {
         return None;
     }
 
     let mut value = String::new();
+
+    // consume the `@` prefix (e.g. `@import`) so the scanner can advance past it
+    if *current_char == '@' {
+        value.push('@');
+        *index += 1;
+    }
 
     while *index < input.len() {
         let ch = input[*index].1;
@@ -55,6 +62,9 @@ fn to_keyword_or_variable(value: String) -> Tokens {
         "loop" => Tokens::Keyword(Keywords::Loop),
         "in" => Tokens::Keyword(Keywords::In),
         "from" => Tokens::Keyword(Keywords::From),
+        "@import" => Tokens::Keyword(Keywords::Import),
+        "@export" => Tokens::Keyword(Keywords::Export),
+
 
         // bool data type
         "true" => Tokens::Primary(Primary::Bool(true)),

@@ -40,6 +40,8 @@ pub enum Keywords {
     Match,
     Enum,
     Loop,
+    Import,
+    Export,
     From,
     Struct,
     Return,

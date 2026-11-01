@@ -42,6 +42,9 @@ pub enum Statement {
         var: Identifier,
         exp: Box<Expression>,
     },
+    Import {
+        path: Box<Expression>
+    },
 }
 #[derive(Debug, Clone)]
 pub struct FunctionDecl {

@@ -4,7 +4,7 @@ use std::io::{Read};
 
 
 pub struct Config {
-    file_path: String
+    pub file_path: String
 }
 
 

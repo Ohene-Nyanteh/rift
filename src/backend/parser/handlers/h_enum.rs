@@ -77,6 +77,6 @@ impl Parser {
 
         // self.expect(Tokens::NonAtomic(NonAtomic::SemiColon))?;
 
-        Ok(Statement::Enum(Box::new(EnumDecl { name, variants })))
+        Ok(Statement::Enum(Box::new(EnumDecl { name, variants})))
     }
 }

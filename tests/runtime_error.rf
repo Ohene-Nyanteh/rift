@@ -1,9 +1,0 @@
-fn inner() {
-    print(x);
-}
-
-fn outer() {
-    inner();
-}
-
-outer();
