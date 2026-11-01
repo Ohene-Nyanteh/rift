@@ -2,6 +2,15 @@
 name = "rift"
 version = "0.1.0"
 edition = "2024"
+repository = "https://github.com/Ohene-Nyanteh/rift"
+authors = ["Ohene Nyanteh"]
+description = "Rift is a lightweight, interpreted scripting language written in Rust. Minimal by design — no bloat, no nonsense."
+
+[package.metadata.wix]
+upgrade-guid = "F645534A-59B9-4647-BD3A-B2FB5854C773"
+path-guid = "F1A6CD21-3F6D-42D0-8529-87D1DE52D123"
+license = false
+eula = false
 
 [dependencies]
 
