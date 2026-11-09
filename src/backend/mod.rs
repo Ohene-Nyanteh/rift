@@ -7,3 +7,4 @@ pub mod nodes;
 pub mod parser;
 pub mod tokens;
 pub mod module_system;
+pub mod argument_parser;

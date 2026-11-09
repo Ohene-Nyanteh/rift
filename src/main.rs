@@ -1,7 +1,8 @@
 use std::env;
 mod backend;
 use backend::config::Config;
-
+mod constants;
+use crate::backend::argument_parser::{ArgumentParser};
 use crate::backend::environment::Environment;
 use crate::backend::executor::{Value, executor};
 use crate::backend::module_system::ModuleGraph;
@@ -22,41 +23,58 @@ pub struct LexerOutput {
 
 
 
+
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
-    let init = Config::build(&args);
-
-    let mut module_system = ModuleGraph::new(init);
-    if let Err(e) = module_system.walk_modules() {
-        eprintln!("{}", e);
-        std::process::exit(1);
-    }
-
-    let mut global_env = Environment::new();
-    let mut call_stack: Vec<StackFrame> = vec![];
 
 
-    for node_index in module_system.order {
-        if let Err(e) = executor(&module_system.nodes[node_index].ast, &mut global_env, &mut call_stack) {
-            eprintln!("{}", e);
 
-            if !call_stack.is_empty() {
-                eprintln!("");
-                let start = call_stack.len().saturating_sub(5);
-                let skipped = start;
+    // take args and run if it returns a value
+    let mut argument_parser = ArgumentParser::new(&args);
+    let initial_file = argument_parser.execute_arguments();
 
-                // Show innermost frame first (most recent call)
-                for frame in call_stack[start..].iter().rev() {
-                    eprintln!("  at {}()", frame.function_name);
-                }
 
-                if skipped > 0 {
-                    eprintln!("  ... {} more (use --full-trace to show all)", skipped);
-                }
+    match initial_file {
+        Some(file_path) => {
+            let init = Config::build(file_path);
+
+            let mut module_system = ModuleGraph::new(init);
+            if let Err(e) = module_system.walk_modules() {
+                eprintln!("{}", e);
+                std::process::exit(1);
             }
 
-            std::process::exit(1);
+            let mut global_env = Environment::new();
+            let mut call_stack: Vec<StackFrame> = vec![];
+
+
+            for node_index in module_system.order {
+                if let Err(e) = executor(&module_system.nodes[node_index].ast, &mut global_env, &mut call_stack) {
+                    eprintln!("{}", e);
+
+                    if !call_stack.is_empty() {
+                        eprintln!("");
+                        let start = call_stack.len().saturating_sub(5);
+                        let skipped = start;
+
+                        // Show innermost frame first (most recent call)
+                        for frame in call_stack[start..].iter().rev() {
+                            eprintln!("  at {}()", frame.function_name);
+                        }
+
+                        if skipped > 0 {
+                            eprintln!("  ... {} more (use --full-trace to show all)", skipped);
+                        }
+                    }
+
+                    std::process::exit(1);
+                }
+            }
         }
+
+        None => std::process::exit(0)
     }
     Ok(())
 }

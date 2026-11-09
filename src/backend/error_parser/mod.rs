@@ -1,4 +1,5 @@
 use crate::backend::{error_parser::tokens::convert_tokens_to_values, tokens::{Span, Tokens}};
+use crate::constants::{BOLD, RESET, CYAN, DIM, RED};
 
 pub mod tokens;
 
@@ -11,11 +12,6 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        const RED: &str = "\x1b[31;1m";
-        const CYAN: &str = "\x1b[36;1m";
-        const BOLD: &str = "\x1b[1m";
-        const DIM: &str = "\x1b[2m";
-        const RESET: &str = "\x1b[0m";
 
         match self {
             Error::UnexpectedToken { expected, found, at, error_line, col_start, col_end } => {

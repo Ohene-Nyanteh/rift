@@ -10,14 +10,10 @@ pub struct Config {
 
 
 impl Config {
-    pub fn build(args: &Vec<String>) -> Self {
-        if args.len() > 2 {
-            eprintln!("Error: Can't Pass more than 1 argument");
-            panic!();
-        }
+    pub fn build(file_path: String) -> Self {
 
         Config {
-            file_path: args[1].clone()
+            file_path: file_path
         }
     }
 
