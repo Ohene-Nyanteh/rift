@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::backend::error_parser::Error;
 use crate::backend::nodes::{Block, FunctionDecl, Identifier, Statement};
 use crate::backend::parser::{Parser, col_for};
@@ -77,7 +79,7 @@ impl Parser {
             }
         }
 
-        Ok(Statement::Function(Box::new(FunctionDecl {
+        Ok(Statement::Function(Rc::new(FunctionDecl {
             name: fn_name,
             args,
             body: Block { statements: body },

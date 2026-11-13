@@ -5,8 +5,8 @@ use crate::backend::{
     nodes::FunctionDecl,
 };
 
-pub fn execute_fn(fn_decl: &Box<FunctionDecl>, env: &Rc<RefCell<Environment>>) {
+pub fn execute_fn(fn_decl: &Rc<FunctionDecl>, env: &Rc<RefCell<Environment>>) {
     env.borrow_mut()
         .functions
-        .insert(fn_decl.name.clone(), *fn_decl.clone());
+        .insert(fn_decl.name.clone(), Rc::clone(fn_decl));
 }

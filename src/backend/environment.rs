@@ -8,7 +8,7 @@ use crate::backend::nodes::{FunctionDecl, Identifier};
 #[derive(Debug, Clone)]
 pub struct Environment {
     pub variables: HashMap<Identifier, Value>,
-    pub functions: HashMap<Identifier, FunctionDecl>,
+    pub functions: HashMap<Identifier, Rc<FunctionDecl>>,
     pub parent: Option<Rc<RefCell<Environment>>>,
 }
 
@@ -39,9 +39,9 @@ impl Environment {
         }
     }
 
-    pub fn get_fn(&self, key: &Identifier) -> Option<FunctionDecl> {
+    pub fn get_fn(&self, key: &Identifier) -> Option<Rc<FunctionDecl>> {
         match self.functions.get(key) {
-            Some(fn_decl) => Some(fn_decl.clone()),
+            Some(fn_decl) => Some(Rc::clone(fn_decl)),
             None => match &self.parent {
                 Some(parent) => parent.borrow().get_fn(key),
                 None => None,

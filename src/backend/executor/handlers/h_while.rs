@@ -16,14 +16,13 @@ pub fn execute_while(
     env: &Rc<RefCell<Environment>>,
     call_stack: &mut Vec<StackFrame>,
 ) -> Result<Signal, Error> {
+     let while_env = Environment::new_child(env);
     loop {
         let condition_value = execute_expressions(condition, env, call_stack)?;
 
         if !is_truthy(&condition_value) {
             break;
         }
-
-        let while_env = Environment::new_child(env);
         let signal = executor(&body.statements, &while_env, call_stack)?;
         match &signal {
             Signal::Break => break,

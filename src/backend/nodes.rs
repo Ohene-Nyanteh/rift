@@ -1,10 +1,12 @@
+use std::rc::Rc;
+
 use crate::backend::executor::Value;
 
 use super::tokens::{Operations, Primary};
 
 #[derive(Debug, Clone)]
 pub enum Statement {
-    Function(Box<FunctionDecl>),
+    Function(Rc<FunctionDecl>),
     Let(Box<LetDecl>),
     Enum(Box<EnumDecl>),
     Struct(Box<StructDecl>),
