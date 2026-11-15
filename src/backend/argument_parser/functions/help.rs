@@ -6,14 +6,14 @@ pub fn print_help() {
 
 {BOLD}Rift (Version){RESET}: {DIM} {VERSION} {RESET}
 
-Usage: rift [...file] [...flags]
+Usage: rift <file> [flags]
 
 {BOLD}Commands{RESET}:
-    file      ./my-script.rf       Execute a rift file. File should end with .rf
-
+    <file>      ./my-script.rf         Execute a Rift file
 
 {BOLD}Flags{RESET}:
-    --help                         Automatically restart the process on file change
-    --version                      Display this menu and exit
+    --help                             Show this help menu and exit
+    --version                          Show the version and exit
+    --upgrade                          Update Rift if a newer version exists
     ");
 }

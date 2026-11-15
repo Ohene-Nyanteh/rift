@@ -24,6 +24,40 @@ cargo build --release
 
 ---
 
+## Command-line Usage
+
+```bash
+rift <file> [flags]
+```
+
+| Flag        | Description                                      |
+|-------------|--------------------------------------------------|
+| `--help`    | Show the help menu and exit.                     |
+| `--version` | Show the Rift version and exit.                  |
+| `--upgrade` | Update Rift if a newer release is available.     |
+
+### Updater
+
+Rift has a built-in updater. If Rift was installed from an official release or installer, run:
+
+```bash
+rift --upgrade
+```
+
+It checks for a newer release, installs it when available, and reports the result:
+
+```
+Updated to 0.1.3
+```
+
+or, when already current:
+
+```
+Rift is already up to date
+```
+
+---
+
 ## Language Reference
 
 ### Comments
@@ -340,6 +374,87 @@ match current {
 
 ---
 
+### Modules, Imports, and Exports
+
+A module is just another `.rf` file. Use `@export` to share a declaration, and `@import` to use it from another file.
+
+**math.rf**
+
+```
+@export fn add(a, b) {
+    return a + b;
+}
+```
+
+**main.rf**
+
+```
+@import { add } from "./math.rf";
+
+print(add(2, 3));  # 5
+```
+
+`@export` can be placed before `let`, `fn`, `struct`, and `enum`:
+
+```
+@export let app_name = "Rift";
+
+@export enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+@export struct Point {
+    x: 0,
+    y: 0
+}
+```
+
+Import paths are strings and are relative to the file doing the importing:
+
+```
+@import { add } from "./math.rf";       # same folder
+@import { helper } from "../lib/util.rf";  # parent folder
+```
+
+Before execution, Rift walks the imports and builds a module graph. Each file is loaded once and run **bottom-up**: dependencies first, then the file that imported them.
+
+```
+main.rf  ──imports──>  math.rf
+
+Execution order:  math.rf  →  main.rf
+```
+
+All modules share one global environment, so a name declared at the top level of an imported module is available after that module runs.
+
+#### Circular imports cannot happen
+
+Rift refuses to run circular imports. During the import walk it keeps the active chain of files on a stack. If a file tries to import something already on that stack, Rift stops with a `Circular import` error.
+
+```
+a.rf  ──imports──>  b.rf  ──imports──>  c.rf
+  ^                                       │
+  └────────────────imports────────────────┘
+
+Circular import:
+ a.rf -> b.rf -> c.rf -> a.rf
+```
+
+The check happens **before any code runs**, so a cycle can never produce an infinite load loop. The same file imported by two different files is fine — it is loaded only once.
+
+```
+      main.rf
+      /     \
+     v       v
+  left.rf  right.rf
+      \     /
+       v   v
+      shared.rf      # loaded once, executed once
+```
+
+---
+
 ## Full Example
 
 FizzBuzz in Rift:
@@ -365,14 +480,13 @@ while (i <= 20) {
 
 ## Planned Features
 
-- Module system
 - Standard library
 
 ---
 
 ## Version
 
-`v0.0.1` — Turing complete. The rest is just features.
+`v0.1.3` — Turing complete, with modules and a built-in updater.
 
 ---
 

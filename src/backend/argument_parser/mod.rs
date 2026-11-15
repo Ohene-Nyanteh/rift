@@ -1,4 +1,4 @@
-use crate::backend::argument_parser::functions::{help::print_help, version::print_version};
+use crate::backend::argument_parser::functions::{help::print_help, upgrade::upgrade, version::print_version};
 
 pub mod functions;
 
@@ -11,6 +11,7 @@ pub struct ArgumentParser {
 pub enum ArgumentEnum {
     Help,
     Version,
+    Upgrade,
     File(String)
 }
 
@@ -32,6 +33,7 @@ impl ArgumentParser {
             match argument.as_str() {
                 "--help" => arguments_enum.push(ArgumentEnum::Help),
                 "--version" => arguments_enum.push(ArgumentEnum::Version),
+                "--upgrade" => arguments_enum.push(ArgumentEnum::Upgrade),
                 file => arguments_enum.push(ArgumentEnum::File(String::from(file))),
             }
         }
@@ -49,6 +51,10 @@ impl ArgumentParser {
                 ArgumentEnum::Version => {
                     print_version();
                     return None
+                }
+                ArgumentEnum::Upgrade => {
+                    let _ = upgrade();
+                    return None;
                 }
                 ArgumentEnum::File(file) => {
                     return Some(file)
